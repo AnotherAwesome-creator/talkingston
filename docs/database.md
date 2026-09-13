@@ -136,6 +136,10 @@ CREATE TABLE public.direct_messages (
 );
 
 CREATE INDEX idx_dm_participants ON public.direct_messages(sender_id, recipient_id);
+CREATE INDEX idx_friendships_participant_status ON public.friendships(user_id, status);
+CREATE INDEX idx_friendships_recipient_status ON public.friendships(friend_id, status);
+CREATE INDEX idx_group_members_user_id ON public.group_members(user_id);
+CREATE INDEX idx_group_messages_group_created ON public.group_messages(group_id, created_at DESC);
 ```
 
 ### 2.6 Social: Private Groups & Group Messages
@@ -332,6 +336,18 @@ Pass 2 uses the existing target tables without introducing duplicates:
 - `profiles` and `companion_settings` remain the source of stable profile, personality, and proactivity context.
 
 The repository still contains no migrations; deployment requires the documented schema and RLS policies to exist in Supabase.
+
+## 5. Pass 4 Social Persistence Usage
+
+Pass 4 uses the documented social tables without duplicate persistence:
+
+- `profiles` is queried only for public discovery fields.
+- `friendships` stores directed pending requests and accepted/blocked relationship state.
+- `direct_messages` stores participant-scoped one-to-one messages and read state.
+- `groups` and `group_members` define private group ownership, roles, and access.
+- `group_messages` stores member-authored group messages.
+
+The application performs server-side authentication and membership checks before every social read/write. Supabase RLS remains the authoritative database boundary. The repository still has no migration files, so these documented tables, indexes, RLS policies, and Realtime publication settings must be deployed before production use.
 
 ## 5. Pass 3 Persistence Usage
 

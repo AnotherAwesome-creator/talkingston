@@ -198,6 +198,12 @@ Pass 3 adds `lib/ai/router/`, which selects one configured provider per request 
 
 Conversation history is paginated and searchable through owner-scoped Supabase queries. Projects use the documented `projects` table, associate through `conversations.project_id`, and are passed to the existing nine-vector context engine only when the active conversation belongs to that project.
 
+### 5.5 Pass 4 Social Hub
+
+Pass 4 adds server-authorized social route handlers under `app/api/users`, `app/api/friends`, `app/api/messages/direct`, and `app/api/groups`. User discovery returns only public profile fields and uses bounded, authenticated search. Friendship state is persisted in `friendships`, while direct and group messages use the documented `direct_messages` and `group_messages` tables.
+
+Client social views subscribe to Supabase Realtime Postgres insert events using the existing browser client. Subscriptions are removed on unmount, and message IDs are de-duplicated when an optimistic response and realtime event both arrive. Group access is checked through `group_members` before metadata, membership, or messages are returned.
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

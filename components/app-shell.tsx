@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Gamepad2, Home, LogOut, Menu, Settings, Users, FolderKanban, X, MessageCircle } from "lucide-react";
+import { Bell, Gamepad2, Home, LogOut, Menu, Settings, Users, FolderKanban, X, MessageCircle, MessagesSquare } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui";
@@ -13,6 +13,7 @@ const nav = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/games", label: "Games", icon: Gamepad2 },
   { href: "/friends", label: "Friends", icon: Users },
+  { href: "/groups", label: "Groups", icon: MessagesSquare },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

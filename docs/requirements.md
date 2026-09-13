@@ -111,6 +111,10 @@ Talkingston can act in multiple distinct operational roles depending on user int
 
 Pass 3 implements bounded conversation history, owner-scoped conversation search, ordered multi-provider routing with health-aware fallback, and owned projects linked to conversations for context. Social, games, quizzes, automation, notifications, and advanced settings remain deferred.
 
+### Pass 4 delivered scope
+
+Pass 4 implements authenticated user discovery, public profile cards, friend requests and state management, private one-to-one messaging, private groups, group membership management, persistent social messages, and client-side Supabase Realtime subscriptions. A typed Whot/Trivia invitation foundation exists without game logic or notification delivery.
+
 ---
 
 ## 5. Scope Boundaries & Explicit Non-Goals (V1)

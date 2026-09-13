@@ -89,6 +89,10 @@ npm run lint
 
 `tests/ai-companion.test.ts` covers deterministic provider behavior, malformed structured-output boundaries through schema validation, completeness of all nine context vectors, bounded context assembly, personality/proactivity context, explicit memory extraction, and keyword fallback ranking. These tests use the mock provider and require no live AI credentials.
 
+## 7. Pass 4 Social Tests
+
+`tests/social.test.ts` covers valid and invalid friendship transitions, duplicate realtime message protection, and Whot/Trivia invitation metadata validation without live Supabase or Realtime credentials. Social route handlers additionally enforce authenticated ownership and membership checks at the API boundary.
+
 ## 6. Pass 3 Tests
 
 The same focused suite also covers provider fallback on rate limits, non-retryable failure stopping, process-local health failure tracking, and active-project context isolation. Supabase-backed history, search, and project routes use authenticated owner filters and are verified through the existing type/lint/build gates without live credentials.

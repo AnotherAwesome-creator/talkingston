@@ -160,3 +160,15 @@ Accepted
 
 ### Decision
 Projects are persisted in the documented `projects` table and linked with `conversations.project_id`. The context engine receives only the active owned project, never unrelated project records.
+
+## ADR-012: Supabase-First Social Messaging
+
+### Status
+Accepted
+
+### Decision
+Friendships, direct messages, groups, members, and group messages use the documented Supabase tables. Server route handlers verify the authenticated user and relationship or group membership before every operation. Browser clients use Supabase Realtime Postgres changes only for delivery updates; they do not replace database authorization or persistence.
+
+### Consequences
+- **Positive**: The social system has one persistence and realtime architecture, while local tests can validate state transitions and duplicate-event handling without live credentials.
+- **Negative**: Production requires deployment of the documented schema, RLS policies, indexes, and Realtime publication settings.

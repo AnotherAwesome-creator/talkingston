@@ -106,3 +106,12 @@ Every incoming API request, server action, and realtime payload is validated usi
 - Project, conversation, and search routes derive ownership from `auth.getUser()` and apply owner filters to every query.
 - Project context is fetched only by owned project ID and only attached to a conversation whose stored `project_id` matches.
 - Search validates query length and applies bounded pagination; it does not return cross-user titles, messages, or snippets.
+
+## 8. Pass 4 Social Controls
+
+- User search requires an authenticated session, a minimum two-character query, bounded pagination, and returns only public profile fields.
+- Friend requests reject self-targeting, duplicate pending/accepted relationships, and blocked targets. Accept/decline operations require the authenticated user to be the request recipient.
+- Direct message reads require a valid participant pair and reject blocked or unavailable recipients. Sends derive `sender_id` from the verified session and never trust a client sender.
+- Group metadata, members, and messages require membership. Only owners/admins manage membership or group metadata; only owners delete groups.
+- Realtime subscriptions use the existing Supabase client and are removed during component cleanup. Realtime is not an authorization boundary; RLS and server route checks remain authoritative.
+- Group invitations require an accepted friendship. No notification or game execution path is connected to invitations.
