@@ -76,6 +76,15 @@ Permanently deletes a specific memory.
 
 All routes derive ownership from the authenticated Supabase session rather than request payloads.
 
+### 2.5 Pass 3 Routing and History
+
+- `GET /api/conversations?page=&limit=` lists recent non-archived conversations with project IDs and message counts.
+- `PATCH /api/conversations/:id` supports rename, pin, archive, and project association.
+- `GET /api/conversations/search?q=&page=&limit=` searches owned conversation titles and message snippets with validation and bounded result ranges.
+- `POST /api/chat/completions` accepts an optional validated `projectId`; the server verifies it matches the owned conversation before adding project context.
+
+The chat route uses the provider router and task category `companion_chat`; provider names and keys are not returned to the client.
+
 ---
 
 ## 3. Authoritative Whot Game API
@@ -169,6 +178,14 @@ Sends a direct message.
 
 ### 6.1 `GET /api/projects` / `POST /api/projects`
 CRUD endpoints for projects.
+
+### 6.1.1 Implemented Pass 3 project routes
+
+- `GET /api/projects`: Lists the authenticated user's projects.
+- `POST /api/projects`: Creates an owned project with validated name, description, and color.
+- `GET /api/projects/:id`: Opens an owned project and its owned conversations.
+- `PATCH /api/projects/:id`: Renames, edits description/color, or archives/restores.
+- `DELETE /api/projects/:id`: Deletes an owned project.
 
 ### 6.2 `GET /api/tasks` / `POST /api/tasks` / `PATCH /api/tasks/:id`
 CRUD endpoints for tasks (status, priority, due date).

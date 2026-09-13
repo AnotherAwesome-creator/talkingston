@@ -107,6 +107,10 @@ Talkingston can act in multiple distinct operational roles depending on user int
 - **NFR-RESP-01**: Fully responsive layout across mobile screens (375px+), tablets (768px+), and desktops (1280px+).
 - **NFR-A11Y-01**: High-contrast color modes, accessible ARIA labels, and full keyboard navigation for interactive widgets.
 
+### Pass 3 delivered scope
+
+Pass 3 implements bounded conversation history, owner-scoped conversation search, ordered multi-provider routing with health-aware fallback, and owned projects linked to conversations for context. Social, games, quizzes, automation, notifications, and advanced settings remain deferred.
+
 ---
 
 ## 5. Scope Boundaries & Explicit Non-Goals (V1)

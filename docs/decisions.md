@@ -144,3 +144,19 @@ Accepted
 
 ### Decision
 Short-term messages and long-term memories remain separate. Only explicit preference, goal, or useful-fact language becomes a memory candidate; ordinary messages are not stored as permanent memory.
+
+## ADR-010: Ordered Provider Routing with Local Health
+
+### Status
+Accepted
+
+### Decision
+Each request selects one provider from configurable ordered candidates. Only retryable rate-limit or temporary-unavailable failures move to the next candidate. A small process-local health registry applies cooldowns and can be replaced by distributed infrastructure later.
+
+## ADR-011: Projects as Context Ownership Boundaries
+
+### Status
+Accepted
+
+### Decision
+Projects are persisted in the documented `projects` table and linked with `conversations.project_id`. The context engine receives only the active owned project, never unrelated project records.

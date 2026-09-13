@@ -4,7 +4,14 @@ import { AiProviderError, type AiMessage, type AiRequestOptions } from "./types"
 export async function readJsonResponse(response: Response, provider: string): Promise<unknown> {
   if (!response.ok) {
     const detail = await response.text();
-    throw new AiProviderError(`${provider} request failed: ${detail.slice(0, 500)}`, provider, response.status);
+    const kind = response.status === 401 || response.status === 403
+      ? "authentication"
+      : response.status === 429
+        ? "rate_limit"
+        : response.status >= 500
+          ? "unavailable"
+          : "invalid_request";
+    throw new AiProviderError(`${provider} request failed: ${detail.slice(0, 500)}`, provider, response.status, kind);
   }
   try {
     return await response.json();

@@ -192,6 +192,12 @@ Pass 2 adds a provider-neutral AI layer under `lib/ai/providers/` with Gemini, A
 
 The chat API persists conversations and messages through the documented Supabase tables, verifies ownership with the authenticated session, streams provider output as SSE, and extracts only explicit useful facts/preferences/goals into `user_memories`. Keyword retrieval is used as the fallback when vector search is unavailable. No external tools are enabled in Pass 2.
 
+### 5.4 Pass 3 Routing, History, and Projects
+
+Pass 3 adds `lib/ai/router/`, which selects one configured provider per request in configurable order (`AI_PROVIDER_ORDER`, default Gemini → Anthropic → OpenAI → Mock). Retryable rate-limit and temporary-unavailable errors move to the next candidate; non-retryable errors stop routing. Lightweight process-local health tracks successful requests, consecutive failures, and cooldowns to avoid retry storms.
+
+Conversation history is paginated and searchable through owner-scoped Supabase queries. Projects use the documented `projects` table, associate through `conversations.project_id`, and are passed to the existing nine-vector context engine only when the active conversation belongs to that project.
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

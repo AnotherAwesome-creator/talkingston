@@ -96,6 +96,7 @@ CREATE TABLE public.conversations (
   title TEXT NOT NULL DEFAULT 'New Conversation',
   role_mode TEXT DEFAULT 'Companion' NOT NULL, -- 'Companion', 'Tutor', 'Referee', 'Quizmaster'
   is_pinned BOOLEAN DEFAULT FALSE,
+  is_archived BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -331,3 +332,7 @@ Pass 2 uses the existing target tables without introducing duplicates:
 - `profiles` and `companion_settings` remain the source of stable profile, personality, and proactivity context.
 
 The repository still contains no migrations; deployment requires the documented schema and RLS policies to exist in Supabase.
+
+## 5. Pass 3 Persistence Usage
+
+Pass 3 uses the documented `projects` table as the ownership boundary for project metadata and associates conversations through `conversations.project_id`. Conversation history uses bounded pages and search queries are scoped by the authenticated owner before returning title/snippet results. The `is_archived` conversation flag supports archive without deleting history.

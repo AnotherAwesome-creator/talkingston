@@ -18,9 +18,18 @@ export interface AiRequestOptions extends AiModelConfig {
 }
 
 export class AiProviderError extends Error {
-  constructor(message: string, public readonly provider: string, public readonly status?: number) {
+  constructor(
+    message: string,
+    public readonly provider: string,
+    public readonly status?: number,
+    public readonly kind: "rate_limit" | "unavailable" | "invalid_request" | "authentication" | "unknown" = "unknown",
+  ) {
     super(message);
     this.name = "AiProviderError";
+  }
+
+  get retryable() {
+    return this.kind === "rate_limit" || this.kind === "unavailable";
   }
 }
 

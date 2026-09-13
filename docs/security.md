@@ -97,3 +97,12 @@ Every incoming API request, server action, and realtime payload is validated usi
 - Context assembly caps recent history and memory count rather than sending the full database to a provider.
 - Memory extraction is opt-in by signal: ordinary messages are not stored as long-term memory; only explicit preferences, goals, and useful facts are candidates.
 - The tool registry is empty in Pass 2. No model output can execute external actions.
+
+## 7. Pass 3 Routing and Project Controls
+
+- Provider routing occurs only on the server. `AI_PROVIDER_ORDER` changes selection order but never exposes credentials.
+- Retryable provider failures are the only failures eligible for fallback; process-local cooldowns limit repeated calls.
+- Provider health is advisory and replaceable; authorization remains enforced by Supabase session checks and RLS.
+- Project, conversation, and search routes derive ownership from `auth.getUser()` and apply owner filters to every query.
+- Project context is fetched only by owned project ID and only attached to a conversation whose stored `project_id` matches.
+- Search validates query length and applies bounded pagination; it does not return cross-user titles, messages, or snippets.

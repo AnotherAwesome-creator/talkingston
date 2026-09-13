@@ -88,3 +88,7 @@ npm run lint
 ## 5. Pass 2 AI Companion Tests
 
 `tests/ai-companion.test.ts` covers deterministic provider behavior, malformed structured-output boundaries through schema validation, completeness of all nine context vectors, bounded context assembly, personality/proactivity context, explicit memory extraction, and keyword fallback ranking. These tests use the mock provider and require no live AI credentials.
+
+## 6. Pass 3 Tests
+
+The same focused suite also covers provider fallback on rate limits, non-retryable failure stopping, process-local health failure tracking, and active-project context isolation. Supabase-backed history, search, and project routes use authenticated owner filters and are verified through the existing type/lint/build gates without live credentials.

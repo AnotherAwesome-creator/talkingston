@@ -11,12 +11,15 @@ export async function getChatUser() {
   return { supabase, user };
 }
 
-export async function buildConversationContext(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, conversationId: string, message: string) {
-  const [{ data: profile }, { data: settings }, { data: memories }, { data: history }] = await Promise.all([
+export async function buildConversationContext(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, conversationId: string, message: string, projectId?: string) {
+  const [{ data: profile }, { data: settings }, { data: memories }, { data: history }, { data: project }] = await Promise.all([
     supabase.from("profiles").select("display_name, username, interests").eq("id", userId).maybeSingle(),
     supabase.from("companion_settings").select("personality, proactivity").eq("user_id", userId).maybeSingle(),
     supabase.from("user_memories").select("content, category, importance").eq("user_id", userId).order("importance", { ascending: false }).limit(20),
     supabase.from("messages").select("sender, content").eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(30),
+    projectId
+      ? supabase.from("projects").select("id, name, description, color_code").eq("id", projectId).eq("user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
   const conversationHistory: AiMessage[] = (history ?? []).map((item: { sender: string; content: string }) => ({ role: item.sender === "assistant" ? "assistant" : "user", content: item.content }));
   return assembleContext({
@@ -26,7 +29,7 @@ export async function buildConversationContext(supabase: Awaited<ReturnType<type
     proactivity: (settings?.proactivity ?? "Normal") as Proactivity,
     relevantMemories: memories ?? [],
     conversationHistory,
-    projectContext: null,
+    projectContext: project ?? null,
     activeActivityGameContext: null,
     permissions: { canReadMemories: true, canWriteMemories: true, canUseTools: false },
   }, message);
