@@ -175,6 +175,17 @@ The core connection infrastructure is established without tables or migrations:
 - **Middleware Session Refresher** (`lib/supabase/middleware.ts`): Minimal technical utility for refreshing auth session tokens without product authorization logic.
 *(Note: Database tables and SQL migrations are intentionally deferred to Stage 2B).*
 
+### 5.2 Pass 1 Application Surfaces
+
+Pass 1 provides the responsive application shell and initial authenticated product surfaces:
+
+- App Router routes for authentication, onboarding, home, projects, games, friends, and settings.
+- Supabase SSR session refresh through middleware and server-side `auth.getUser()` checks for protected layouts.
+- Server actions for validated profile and companion-settings writes. These actions derive the user ID from the verified session and write only to the documented `profiles` and `companion_settings` tables.
+- Client components handle loading, inline error, success, empty, and unauthorized states without exposing service-role credentials.
+
+Projects, games, social features, AI chat, memory, notifications, and automation remain intentionally out of scope for Pass 1.
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

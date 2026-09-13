@@ -1,0 +1,3 @@
+import { FolderKanban } from "lucide-react";
+import { StateCard } from "@/components/ui";
+export default function ProjectsPage() { return <div className="grid gap-6"><header><p className="text-sm font-semibold text-indigo-300">WORKSPACE</p><h1 className="mt-2 text-3xl font-semibold">Projects</h1><p className="mt-2 text-muted">Keep the things you care about close by.</p></header><StateCard title="Your project space is quiet" description="Project functionality is coming in a later pass. Your data will stay private and yours." action={<FolderKanban className="mx-auto h-10 w-10 text-indigo-300/60" />} /></div>; }
