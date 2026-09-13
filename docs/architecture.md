@@ -186,6 +186,12 @@ Pass 1 provides the responsive application shell and initial authenticated produ
 
 Projects, games, social features, AI chat, memory, notifications, and automation remain intentionally out of scope for Pass 1.
 
+### 5.3 Pass 2 AI Companion
+
+Pass 2 adds a provider-neutral AI layer under `lib/ai/providers/` with Gemini, Anthropic, OpenAI, and deterministic mock adapters. Provider credentials are read only in server-side code. `lib/ai/context/` assembles exactly nine bounded context vectors before a provider call: profile, preferences, personality, proactivity, relevant memories, conversation history, project context, active activity/game context, and permissions.
+
+The chat API persists conversations and messages through the documented Supabase tables, verifies ownership with the authenticated session, streams provider output as SSE, and extracts only explicit useful facts/preferences/goals into `user_memories`. Keyword retrieval is used as the fallback when vector search is unavailable. No external tools are enabled in Pass 2.
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

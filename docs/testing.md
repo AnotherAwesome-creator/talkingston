@@ -84,3 +84,7 @@ npx tsc --noEmit
 # Run Next.js and ESLint code quality checks
 npm run lint
 ```
+
+## 5. Pass 2 AI Companion Tests
+
+`tests/ai-companion.test.ts` covers deterministic provider behavior, malformed structured-output boundaries through schema validation, completeness of all nine context vectors, bounded context assembly, personality/proactivity context, explicit memory extraction, and keyword fallback ranking. These tests use the mock provider and require no live AI credentials.

@@ -320,3 +320,14 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 - **User Memories**: Read, insert, delete restricted strictly to `auth.uid() = user_id`.
 - **Direct Messages**: Read restricted to `auth.uid() IN (sender_id, recipient_id)`.
 - **Whot Sessions**: Read restricted to participants in the session; write updates guarded by game engine server validation.
+
+## 4. Pass 2 Persistence Usage
+
+Pass 2 uses the existing target tables without introducing duplicates:
+
+- `conversations` stores the authenticated owner, title, role mode, pin state, and timestamps.
+- `messages` stores short-term conversation context with `sender` and `content`.
+- `user_memories` stores only extracted persistent candidates and is always queried/deleted with the authenticated `user_id`.
+- `profiles` and `companion_settings` remain the source of stable profile, personality, and proactivity context.
+
+The repository still contains no migrations; deployment requires the documented schema and RLS policies to exist in Supabase.

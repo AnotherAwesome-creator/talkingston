@@ -88,3 +88,12 @@ Every incoming API request, server action, and realtime payload is validated usi
 2. **Right to Erase**: Immediate granular or complete memory deletion with instant database removal.
 3. **Data Export**: Users can download a JSON export of their profile, conversation history, and project tasks.
 4. **Profile Visibility**: Users can toggle visibility between `Public`, `Friends Only`, or `Private`.
+
+## 6. Pass 2 AI and Memory Controls
+
+- Provider adapters are server-only and read API keys from private environment variables. No provider SDK or key is imported by client components.
+- Chat and memory routes call `auth.getUser()` and scope every conversation or memory query by the verified user ID.
+- Chat input, conversation updates, memory query parameters, and provider structured output are validated with Zod.
+- Context assembly caps recent history and memory count rather than sending the full database to a provider.
+- Memory extraction is opt-in by signal: ordinary messages are not stored as long-term memory; only explicit preferences, goals, and useful facts are candidates.
+- The tool registry is empty in Pass 2. No model output can execute external actions.

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Gamepad2, Home, LogOut, Menu, Settings, Users, FolderKanban, X } from "lucide-react";
+import { Bell, Gamepad2, Home, LogOut, Menu, Settings, Users, FolderKanban, X, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui";
 
 const nav = [
   { href: "/home", label: "Home", icon: Home },
+  { href: "/chat", label: "Companion", icon: MessageCircle },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/games", label: "Games", icon: Gamepad2 },
   { href: "/friends", label: "Friends", icon: Users },
@@ -35,6 +36,6 @@ export function AppShell({ children, userName = "there" }: { children: React.Rea
     </aside>
     {open && <button className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setOpen(false)} aria-label="Close navigation overlay" />}
     <div className="min-w-0 flex-1"><header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/10 bg-[#090a0f]/75 px-4 backdrop-blur-xl sm:px-8"><button className="rounded-lg p-2 text-slate-300 lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation"><Menu className="h-5 w-5" /></button><div className="hidden text-sm text-slate-400 sm:block">Good to see you, <span className="text-slate-100">{userName}</span></div><div className="ml-auto flex items-center gap-2"><button className="rounded-lg p-2 text-slate-400 hover:bg-white/[.06]" aria-label="Notifications"><Bell className="h-5 w-5" /></button><Link href="/settings"><Avatar name={userName} size="sm" /></Link></div></header><main className="mx-auto max-w-7xl px-4 py-6 pb-24 sm:px-8 lg:pb-10">{children}</main></div>
-    <nav className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-5 rounded-2xl border border-white/10 bg-[#11131a]/95 p-2 shadow-2xl backdrop-blur-xl lg:hidden" aria-label="Mobile navigation">{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`grid justify-items-center gap-1 rounded-xl py-2 text-[10px] ${pathname === href ? "bg-indigo-500/20 text-indigo-200" : "text-slate-500"}`}><Icon className="h-4 w-4" />{label}</Link>)}</nav>
+    <nav className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-5 rounded-2xl border border-white/10 bg-[#11131a]/95 p-2 shadow-2xl backdrop-blur-xl lg:hidden" aria-label="Mobile navigation">{nav.slice(0, 5).map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`grid justify-items-center gap-1 rounded-xl py-2 text-[10px] ${pathname === href ? "bg-indigo-500/20 text-indigo-200" : "text-slate-500"}`}><Icon className="h-4 w-4" />{label}</Link>)}</nav>
   </div>;
 }

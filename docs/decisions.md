@@ -125,3 +125,22 @@ Chess is an intricate game requiring deep board logic, opening books, specialize
 
 ### Decision
 Chess is strictly excluded from Talkingston V1 to prioritize polish and depth on Whot, Trivia, and the AI Companion experience.
+
+## ADR-008: Provider-Neutral Companion Boundary
+
+### Status
+Accepted
+
+### Decision
+All companion generation goes through `AiProvider`; application routes never call a vendor API directly. Gemini, Anthropic, OpenAI, and a deterministic mock adapter implement the boundary.
+
+### Consequences
+Provider credentials remain server-only and tests remain deterministic, while provider-specific streaming and structured-output differences are isolated to adapters.
+
+## ADR-009: Explicit Memory Extraction
+
+### Status
+Accepted
+
+### Decision
+Short-term messages and long-term memories remain separate. Only explicit preference, goal, or useful-fact language becomes a memory candidate; ordinary messages are not stored as permanent memory.

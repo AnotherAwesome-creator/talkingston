@@ -65,6 +65,17 @@ Fetches user memories with optional semantic filtering.
 Permanently deletes a specific memory.
 - **Response `200 OK`**: `{ success: true }`.
 
+### 2.4 Implemented Pass 2 Conversation Routes
+
+- `GET /api/conversations`: Lists conversations owned by the authenticated user.
+- `POST /api/conversations`: Creates a companion conversation.
+- `GET /api/conversations/:id`: Loads an owned conversation and its messages.
+- `PATCH /api/conversations/:id`: Renames or pins an owned conversation.
+- `DELETE /api/conversations/:id`: Deletes an owned conversation.
+- `POST /api/chat/completions`: Validates the conversation and message, assembles the nine context vectors, invokes the configured provider, streams SSE chunks, persists the assistant response, and extracts explicit memories.
+
+All routes derive ownership from the authenticated Supabase session rather than request payloads.
+
 ---
 
 ## 3. Authoritative Whot Game API
