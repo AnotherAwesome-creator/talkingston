@@ -64,6 +64,12 @@ Secrets are separated into public client variables and strictly protected server
 - `ANTHROPIC_API_KEY`: Anthropic API key.
 - `OPENAI_API_KEY`: OpenAI API key.
 
+### 3.1 Implemented Credential Segregation (Stage 2A)
+- **Browser Boundary**: `lib/supabase/client.ts` strictly references `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. It contains zero references to `SUPABASE_SERVICE_ROLE_KEY`.
+- **Server Session Boundary**: `lib/supabase/server.ts` uses `createServerClient` with the public anon key and request cookies, representing the authenticated user without elevated permissions.
+- **Admin Service Role Guard**: `lib/supabase/admin.ts` implements a runtime check throwing `SECURITY VIOLATION` if executed in a browser context (`typeof window !== 'undefined'`).
+- **Zero Secrets in Repository**: Secrets are loaded locally via `.env.local` (which is confirmed ignored in `.gitignore`), and template placeholders only are in `.env.example`. Database migrations and tables remain uncreated until Stage 2B.
+
 ---
 
 ## 4. Input Validation Standards (Zod)

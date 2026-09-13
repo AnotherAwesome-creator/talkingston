@@ -167,6 +167,14 @@ Talkingston utilizes **Supabase** as its sole, authoritative persistence layer:
 4. **Supabase Realtime**: Powers low-latency card moves in Whot, multiplayer quiz rooms, and 1-on-1 direct messaging.
 5. **Supabase Storage**: Secure buckets for user avatars and uploaded study documents (PDF, TXT, MD) with private access policies.
 
+### 5.1 Implemented Client & Server Connection Layer (Stage 2A)
+The core connection infrastructure is established without tables or migrations:
+- **Browser Client** (`lib/supabase/client.ts`): SSR-safe browser client using `@supabase/ssr` (`createBrowserClient`), restricted strictly to `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- **Server Client** (`lib/supabase/server.ts`): App Router client using `@supabase/ssr` (`createServerClient`) coupled with Next.js `cookies()` storage for authenticated sessions.
+- **Admin Client** (`lib/supabase/admin.ts`): Server-only client with `SUPABASE_SERVICE_ROLE_KEY` guarded by runtime browser checks (`typeof window !== 'undefined'`).
+- **Middleware Session Refresher** (`lib/supabase/middleware.ts`): Minimal technical utility for refreshing auth session tokens without product authorization logic.
+*(Note: Database tables and SQL migrations are intentionally deferred to Stage 2B).*
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

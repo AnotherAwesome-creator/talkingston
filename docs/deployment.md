@@ -39,9 +39,19 @@ ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
 ```
 
+### 2.2 Local Environment Setup (Stage 2A)
+For local development and testing, create `.env.local` (which is excluded from Git):
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-server-key
+AI_PROVIDER=mock
+```
+
 ---
 
-## 3. Database Migration Runbook
+## 3. Database Migration Runbook (Deferred to Stage 2B)
 
 ### 3.1 Initial Setup on Supabase
 1. Create a new Supabase project.

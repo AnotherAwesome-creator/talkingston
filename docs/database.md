@@ -1,5 +1,9 @@
 # Talkingston V1 — Database Schema & Data Models
 
+> **Implementation Status (Stage 2A)**:
+> The client/server connection layer (`lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts`, `lib/supabase/middleware.ts`) is established and verified.
+> The tables, extensions, indexes, and RLS policies detailed below represent the authoritative target schema to be deployed via migrations in **Stage 2B**. No tables or migrations have been created yet.
+
 This document specifies the PostgreSQL database schema, data models, extensions, indexes, and Row Level Security (RLS) policies for Talkingston V1 on Supabase.
 
 ---
