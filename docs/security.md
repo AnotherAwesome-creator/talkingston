@@ -1,6 +1,6 @@
 # Talkingston V1 — Security & Privacy Architecture
 
-Trivia answer rows enforce authenticated membership and actor identity. Active quiz responses omit correct answers and explanations. Document uploads are private, owner-prefixed, size-bounded, and limited to PDF, TXT, and Markdown; DOCX and arbitrary public file access are excluded.
+Trivia answer rows enforce authenticated membership and actor identity. Active quiz responses omit correct answers and explanations. Document uploads are private, owner-prefixed, size-bounded, and limited to PDF, TXT, and Markdown; DOCX and arbitrary public file access are excluded. AI generation is invoked only after owner authorization and bounded extraction.
 
 This document establishes the security policies, Row Level Security (RLS) matrix, threat model, input validation standards, and user privacy guarantees for Talkingston V1.
 

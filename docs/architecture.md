@@ -1,6 +1,6 @@
 # Talkingston V1 — System Architecture
 
-Pass 6 adds deterministic Trivia and a bounded document-to-quiz pipeline. AI may propose question content, but validation, answer locking, timing, scoring, ranking, room membership, and ownership stay server-authoritative.
+Pass 6 adds deterministic Trivia and a bounded document-to-quiz pipeline. AI may propose question content, but validation, answer locking, timing, scoring, ranking, room membership, and ownership stay server-authoritative. PDF/TXT/Markdown documents are extracted server-side, capped at 100,000 characters, and stored privately before structured generation.
 
 This document defines the high-level architecture, module boundaries, data flow pipelines, and technical contracts governing Talkingston V1.
 

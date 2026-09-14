@@ -13,9 +13,20 @@ export function validateDocument(file: { type: string; size: number }) {
 
 export function extractText(buffer: Buffer, type: string) {
   if (!supportedDocumentTypes.includes(type as typeof supportedDocumentTypes[number])) throw new Error("Unsupported document type.");
-  const text = type === "text/plain" || type === "text/markdown" ? buffer.toString("utf8") : buffer.toString("utf8").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ");
+  const text = type === "text/plain" || type === "text/markdown"
+    ? buffer.toString("utf8")
+    : extractPdfText(buffer);
   if (!text.trim()) throw new Error("Document contains no extractable text.");
   return text.slice(0, 100000);
+}
+
+function extractPdfText(buffer: Buffer) {
+  if (buffer.subarray(0, 5).toString("ascii") !== "%PDF-") throw new Error("Invalid PDF document.");
+  const source = buffer.toString("latin1");
+  const fragments = [...source.matchAll(/\(([^()]*)\)\s*Tj/g)].map((match) => match[1]);
+  const text = fragments.join(" ").replace(/\\([()\\])/g, "$1").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ");
+  if (!text.trim()) throw new Error("PDF contains no extractable text.");
+  return text;
 }
 
 export function validateGeneratedQuiz(input: unknown): TriviaQuestion[] {

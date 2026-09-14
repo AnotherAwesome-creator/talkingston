@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptSubmission, rankScores, scoreAnswer, triviaQuestionSchema, validateQuestions } from "@/lib/games/trivia";
+import { acceptSubmission, advanceQuestion, createTriviaState, rankScores, scoreAnswer, startQuestion, submitAnswer, triviaQuestionSchema, validateQuestions } from "@/lib/games/trivia";
 import { extractText, validateDocument, validateGeneratedQuiz } from "@/lib/games/document-quiz";
 
 const question = triviaQuestionSchema.parse({
@@ -21,6 +21,13 @@ describe("deterministic trivia", () => {
     const first = [{ userId: "a", questionId: "q1", optionIndex: 1, submittedAtMs: 1 }];
     expect(() => acceptSubmission(first, first[0])).toThrow("already");
     expect(rankScores({ a: 4, b: 9 })[0].userId).toBe("b");
+  });
+  it("locks, scores, advances, and finishes a room deterministically", () => {
+    const started = startQuestion(createTriviaState(), 1000);
+    const result = submitAnswer(started, question, { userId: "a", questionId: "q1", optionIndex: 1, submittedAtMs: 1000 });
+    expect(result.state.locked).toBe(true);
+    expect(result.score.points).toBe(155);
+    expect(advanceQuestion(result.state, 1).finished).toBe(true);
   });
   it("accepts bounded TXT/Markdown/PDF extraction", () => {
     expect(validateDocument({ type: "text/plain", size: 4 })).toBe(true);

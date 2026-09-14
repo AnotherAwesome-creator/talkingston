@@ -164,6 +164,9 @@ Submits a round answer for deterministic server scoring.
 
 Trivia answers are validated and scored by `lib/games/trivia.ts`; generated question content must pass the Zod question schema before persistence. Correct answers are not returned while a room is active.
 
+- `POST /api/documents`: private authenticated PDF/TXT/Markdown upload, bounded extraction, and ownership metadata.
+- `POST /api/documents/:id/quiz`: owner-only structured quiz generation through the AI provider router and persisted quiz ownership.
+
 ### 5.1 `GET /api/users/search?q=<query>`
 Searches profiles by username or display name with debouncing.
 

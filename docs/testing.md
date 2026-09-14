@@ -1,6 +1,6 @@
 # Talkingston V1 — Testing Strategy & Protocol
 
-Pass 6 tests cover question schema validation, malformed options, timer-aware deterministic scoring, duplicate submissions, rankings, supported document MIME types, bounded extraction, and generated quiz rejection.
+Pass 6 tests cover question schema validation, malformed options, timer-aware deterministic scoring, duplicate submissions, rankings, room locking/progression, supported document MIME types, bounded extraction, and generated quiz rejection.
 
 This document defines the automated testing architecture, test harnesses, coverage criteria, and execution commands for Talkingston V1.
 

@@ -15,6 +15,15 @@ export type TriviaQuestion = z.infer<typeof triviaQuestionSchema>;
 
 export type TriviaSubmission = { userId: string; questionId: string; optionIndex: number; submittedAtMs: number };
 export type TriviaScore = { correct: boolean; points: number; streak: number };
+export type TriviaRoomState = {
+  index: number;
+  startedAtMs: number | null;
+  locked: boolean;
+  finished: boolean;
+  submissions: TriviaSubmission[];
+  scores: Record<string, number>;
+  streaks: Record<string, number>;
+};
 
 const basePoints = { easy: 100, medium: 150, hard: 200 } as const;
 
@@ -39,8 +48,40 @@ export function acceptSubmission(submissions: TriviaSubmission[], submission: Tr
   if (submissions.some((entry) => entry.userId === submission.userId && entry.questionId === submission.questionId)) {
     throw new Error("Answer already submitted.");
   }
+
   if (!Number.isInteger(submission.optionIndex) || submission.optionIndex < 0 || submission.optionIndex > 3) {
     throw new Error("Invalid answer.");
   }
+
   return [...submissions, submission];
+}
+
+export function createTriviaState(): TriviaRoomState {
+  return { index: 0, startedAtMs: null, locked: false, finished: false, submissions: [], scores: {}, streaks: {} };
+}
+
+export function startQuestion(state: TriviaRoomState, nowMs: number) {
+  if (state.finished) throw new Error("Quiz has finished.");
+  return { ...state, startedAtMs: nowMs, locked: false, submissions: [] };
+}
+
+export function submitAnswer(state: TriviaRoomState, question: TriviaQuestion, submission: TriviaSubmission) {
+  if (state.locked || state.finished) throw new Error("This question is locked.");
+  const submissions = acceptSubmission(state.submissions, submission);
+  const score = scoreAnswer(question, submission.optionIndex, submission.submittedAtMs, state.streaks[submission.userId] ?? 0);
+  return {
+    state: {
+      ...state,
+      submissions,
+      scores: { ...state.scores, [submission.userId]: (state.scores[submission.userId] ?? 0) + score.points },
+      streaks: { ...state.streaks, [submission.userId]: score.streak },
+      locked: true,
+    },
+    score,
+  };
+}
+
+export function advanceQuestion(state: TriviaRoomState, questionCount: number) {
+  const index = state.index + 1;
+  return { ...state, index, startedAtMs: null, locked: false, submissions: [], finished: index >= questionCount };
 }

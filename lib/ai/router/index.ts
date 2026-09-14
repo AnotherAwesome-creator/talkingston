@@ -1,6 +1,7 @@
 import { AiProviderError, createAiProvider, type AiProvider } from "@/lib/ai/providers";
 import { getProviderHealth, providerAvailable, recordProviderFailure, recordProviderSuccess } from "./health";
 import type { AiTask, ProviderResolver, RoutedTextResponse, RouterRequest } from "./types";
+import type { z } from "zod";
 
 const defaultOrder = ["gemini", "anthropic", "openai", "mock"];
 
@@ -30,6 +31,21 @@ export class AiProviderRouter implements ProviderResolver {
         const text = await candidate.instance.generateText(request.messages, request.options);
         recordProviderSuccess(candidate.provider);
         return { provider: candidate.provider, text };
+      } catch (error) {
+        const retryable = error instanceof AiProviderError ? error.retryable : false;
+        recordProviderFailure(candidate.provider, retryable);
+        if (!retryable) break;
+      }
+    }
+    throw new AiProviderError("All configured AI providers are currently unavailable.", "router", undefined, "unavailable");
+  }
+
+  async generateStructured<T>(request: RouterRequest, schema: z.ZodType<T>): Promise<{ provider: string; value: T }> {
+    for (const candidate of this.candidates(request.task)) {
+      try {
+        const value = await candidate.instance.generateStructured(request.messages, schema, request.options);
+        recordProviderSuccess(candidate.provider);
+        return { provider: candidate.provider, value };
       } catch (error) {
         const retryable = error instanceof AiProviderError ? error.retryable : false;
         recordProviderFailure(candidate.provider, retryable);
