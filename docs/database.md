@@ -1,5 +1,7 @@
 # Talkingston V1 — Database Schema & Data Models
 
+The forward-only Pass 6 migration adds `trivia_rooms`, `trivia_players`, `trivia_answers`, `user_documents`, and `document_quizzes`. Ownership and room membership are protected by RLS; no database reset or blind push is part of this change.
+
 > **Implementation Status (Stage 2A)**:
 > The client/server connection layer (`lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts`, `lib/supabase/middleware.ts`) is established and verified.
 > The tables, extensions, indexes, and RLS policies detailed below represent the authoritative target schema. Pass 4 adds a forward-only social migration under `supabase/migrations/`.
@@ -352,6 +354,10 @@ The application performs server-side authentication and membership checks before
 ## 6. Pass 4 migration
 
 `supabase/migrations/20260913210000_pass4_social.sql` creates or extends the social tables, adds self/role/status/content constraints, adds participant and membership indexes, enables RLS, installs participant/member/owner policies, exposes only the five approved fields through `public_profiles`, protects immutable DM/group ownership fields with triggers, and adds `direct_messages` and `group_messages` to `supabase_realtime`. The migration is forward-only and does not reset or drop existing data.
+
+## Pass 5 Whot migration
+
+`supabase/migrations/20260914100000_pass5_whot.sql` adds forward-only `whot_rooms`, `whot_players`, and `whot_events` tables. Room state is versioned JSON for reconnects; RLS restricts room, player, and event access to members, and only authenticated room members can append events. `whot_events` is included in `supabase_realtime`. The migration has not been applied remotely by this coding session.
 
 ## 5. Pass 3 Persistence Usage
 

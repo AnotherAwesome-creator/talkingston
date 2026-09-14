@@ -156,6 +156,14 @@ Submits a round answer for deterministic server scoring.
 
 ## 5. Social & Direct Messaging API
 
+### 4.4 Implemented Pass 6 routes
+
+- `GET/POST /api/trivia/rooms`: authenticated room listing and validated room creation.
+- `GET/POST /api/trivia/rooms/:id`: membership, start/rematch, answer locking, deterministic scoring, and optimistic version checks.
+- `POST /api/documents`: authenticated private upload for PDF, TXT, and Markdown files with bounded extraction.
+
+Trivia answers are validated and scored by `lib/games/trivia.ts`; generated question content must pass the Zod question schema before persistence. Correct answers are not returned while a room is active.
+
 ### 5.1 `GET /api/users/search?q=<query>`
 Searches profiles by username or display name with debouncing.
 
@@ -223,3 +231,9 @@ Lists and updates user notification statuses.
 | `dm:<chatId>` | 1-on-1 private messaging | `NEW_MESSAGE`, `TYPING`, `READ_RECEIPT` |
 | `group:<groupId>` | Group collaboration and messages | `GROUP_MESSAGE`, `MEMBER_JOINED` |
 | `user:<userId>` | Personal notifications and presence | `NOTIFICATION`, `FRIEND_STATUS` |
+
+## Username discovery and Whot
+
+`GET /api/users/search?q=&page=&limit=` requires authentication, bounds results to 20, excludes the caller, escapes wildcard syntax, and selects only the `public_profiles` fields. `GET /api/users/:id` returns the same public field set.
+
+`GET /api/whot/rooms` lists member rooms. `POST /api/whot/rooms` creates a room. `POST /api/whot/rooms/:id/join` joins a lobby. `GET` and `POST /api/whot/rooms/:id` read redacted state and submit validated draw/play actions. Server-side state transitions use the pure Whot engine and optimistic version checks.

@@ -148,3 +148,7 @@ If an incorrect option is submitted or the round times out:
 4. **Reveal**: Correct answer and Talkingston Quizmaster commentary displayed for 4 seconds.
 5. **Leaderboard**: Real-time rank calculation broadcast via Supabase Realtime.
 6. **Podium**: Final score tabulation and winner announcement.
+
+## 3. Implemented Whot boundary
+
+The current Whot implementation uses `lib/games/whot.ts` as a pure deterministic rules module. Room API handlers persist versioned state in `whot_rooms`, membership in `whot_players`, and event history in `whot_events`. Client code never decides legality; it submits a card or draw action and renders the server response. Cross-account realtime and AI commentary remain integration work requiring the live Supabase environment.

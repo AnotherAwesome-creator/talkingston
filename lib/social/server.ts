@@ -7,6 +7,10 @@ export function isMissingAuthSession(error: { name?: string } | null) {
   return error?.name === "AuthSessionMissingError";
 }
 
+export function escapeProfileSearchTerm(value: string) {
+  return value.replace(/[\\%_(),]/g, (character) => `\\${character}`);
+}
+
 export async function getSocialUser() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();

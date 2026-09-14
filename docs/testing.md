@@ -1,5 +1,7 @@
 # Talkingston V1 — Testing Strategy & Protocol
 
+Pass 6 tests cover question schema validation, malformed options, timer-aware deterministic scoring, duplicate submissions, rankings, supported document MIME types, bounded extraction, and generated quiz rejection.
+
 This document defines the automated testing architecture, test harnesses, coverage criteria, and execution commands for Talkingston V1.
 
 ---
@@ -98,3 +100,5 @@ The migration is reviewed statically for social table constraints, RLS policy co
 ## 6. Pass 3 Tests
 
 The same focused suite also covers provider fallback on rate limits, non-retryable failure stopping, process-local health failure tracking, and active-project context isolation. Supabase-backed history, search, and project routes use authenticated owner filters and are verified through the existing type/lint/build gates without live credentials.
+
+Whot unit tests cover the 54-card deck, five-card dealing, legal/illegal card selection, and exhaustion scoring. Room API and cross-account Realtime tests require the Whot migration and multiple authenticated identities in the live project.

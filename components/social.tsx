@@ -19,7 +19,25 @@ async function requestJson(url: string, options?: RequestInit) {
 }
 
 function ProfileCard({ profile, action }: { profile: Profile; action?: React.ReactNode }) {
-  return <Card className="flex items-center gap-3"><Avatar name={profile.display_name} src={profile.avatar_url} /><div className="min-w-0 flex-1"><p className="font-semibold">{profile.display_name}</p><p className="text-sm text-muted">@{profile.username}</p></div>{action}</Card>;
+  return <Card className="flex items-center gap-3"><Link href={`/users/${profile.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"><Avatar name={profile.display_name} src={profile.avatar_url} /><div className="min-w-0"><p className="font-semibold">{profile.display_name}</p><p className="text-sm text-muted">@{profile.username}</p></div></Link>{action}</Card>;
+}
+
+export function PublicProfileView({ userId }: { userId: string }) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setProfile((await requestJson(`/api/users/${userId}`)).user);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to load profile.");
+      }
+    };
+    void load();
+  }, [userId]);
+  if (error) return <StateCard title="Profile unavailable" description={error} />;
+  if (!profile) return <StateCard title="Loading profile" description="Fetching public profile details..." />;
+  return <div className="grid max-w-2xl gap-6"><Link href="/friends" className="text-sm text-indigo-300">← Back to friends</Link><Card className="grid gap-4"><div className="flex items-center gap-4"><Avatar name={profile.display_name} src={profile.avatar_url} /><div><h1 className="text-2xl font-semibold">{profile.display_name}</h1><p className="text-sm text-muted">@{profile.username}</p></div></div>{profile.bio && <p className="text-slate-300">{profile.bio}</p>}<Link href={`/messages/${profile.id}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-500 px-4 text-sm font-semibold text-white">Message</Link></Card></div>;
 }
 
 export function FriendsHub() {

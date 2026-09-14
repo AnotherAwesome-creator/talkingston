@@ -123,3 +123,5 @@ Pass 4 implements authenticated user discovery, public profile cards, friend req
 - **DOCX is deferred**: Document-to-quiz V1 strictly supports PDF, TXT, and Markdown.
 - **Voice/Audio Realtime**: Live audio duplex streaming is out of scope for V1; text streaming and animated expressions are used.
 - **Alternative In-Memory Databases**: Supabase PostgreSQL is the authoritative persistence engine; no duplicate in-memory DB will be built.
+
+Username discovery is authenticated, bounded, case-insensitive, excludes the caller, and returns only the public profile projection. Whot room state is server-authoritative and deterministic; the current implementation persists versioned room state and redacts opponents' hands.

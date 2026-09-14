@@ -57,7 +57,15 @@ export async function saveProfile(input: { displayName: string; username: string
     bio: parsed.data.bio || null,
     updated_at: new Date().toISOString(),
   }).eq("id", user.id);
-  if (error) return { ok: false as const, error: error.message };
+  if (error) {
+    if (
+      error.code === "23505"
+      && [error.message, error.details, error.hint].some((value) => value?.toLowerCase().includes("username"))
+    ) {
+      return { ok: false as const, error: "That username is already taken." };
+    }
+    return { ok: false as const, error: error.message };
+  }
   revalidatePath("/settings/profile");
   revalidatePath("/home");
   return { ok: true as const };

@@ -1,5 +1,7 @@
 # Talkingston V1 — System Architecture
 
+Pass 6 adds deterministic Trivia and a bounded document-to-quiz pipeline. AI may propose question content, but validation, answer locking, timing, scoring, ranking, room membership, and ownership stay server-authoritative.
+
 This document defines the high-level architecture, module boundaries, data flow pipelines, and technical contracts governing Talkingston V1.
 
 ---
@@ -219,3 +221,5 @@ The V1 document ingestion pipeline processes study materials deterministically:
 3. **Chunking & Summarization**: Text split into semantic segments.
 4. **Quiz Generation**: AI Provider generates structured multiple-choice questions validated via Zod schemas.
 5. **Storage**: Verified questions stored in PostgreSQL for solo practice or live quiz rooms.
+
+Whot follows the same boundary: pure TypeScript validates and mutates game state, API routes authorize the room member and persist versioned state, and Supabase Realtime distributes persisted events. AI commentary or opponent heuristics may only consume engine-approved events and legal moves.

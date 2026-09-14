@@ -1,5 +1,7 @@
 # Talkingston V1 — Architecture Decision Records (ADRs)
 
+Trivia follows the Whot authority boundary: AI can propose content or commentary, never answer truth, timing, score, ranking, or permissions. Document quiz support is intentionally limited to PDF, TXT, and Markdown in V1; DOCX is deferred.
+
 This document records the foundational architectural decisions, rationale, alternatives considered, and trade-offs made for Talkingston V1.
 
 ---
@@ -172,3 +174,7 @@ Friendships, direct messages, groups, members, and group messages use the docume
 ### Consequences
 - **Positive**: The social system has one persistence and realtime architecture, while local tests can validate state transitions and duplicate-event handling without live credentials.
 - **Negative**: Production requires deployment of the documented schema, RLS policies, indexes, and Realtime publication settings.
+
+## ADR-005: Whot state authority
+
+Whot legality, effects, scoring, and winner calculation remain deterministic and independent of AI providers. Room APIs persist the resulting state with a version check, redact private hands in responses, and use Supabase Realtime only for synchronization.
