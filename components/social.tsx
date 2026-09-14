@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MessageCircle, UserPlus, UserRound, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -38,7 +39,7 @@ function useRealtime(table: "direct_messages" | "group_messages", filter: string
     let client: ReturnType<typeof createClient> | null = null;
     try {
       client = createClient();
-      const channel = client.channel(`social:${table}:${filter}`).on("postgres_changes", { event: "INSERT", schema: "public", table, filter }, (payload) => onMessage(payload.new as Message)).subscribe();
+      const channel = client.channel(`social:${table}:${filter || "all"}`).on("postgres_changes", { event: "INSERT", schema: "public", table, ...(filter ? { filter } : {}) }, (payload) => onMessage(payload.new as Message)).subscribe();
       return () => { void client?.removeChannel(channel); };
     } catch {
       return undefined;
@@ -52,12 +53,27 @@ function MessageComposer({ onSend, placeholder }: { onSend: (content: string) =>
   return <form onSubmit={submit} className="flex gap-2"><input className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.04] px-3 text-sm text-slate-100 outline-none focus:border-indigo-400" value={content} onChange={(event) => setContent(event.target.value)} placeholder={placeholder} /><Button loading={sending}>Send</Button></form>;
 }
 
+export function MessageInbox() {
+  const [conversations, setConversations] = useState<Array<{ userId: string; partner: Profile; lastMessage: Message; unreadCount: number }>>([]);
+  const [error, setError] = useState("");
+  const load = useCallback(async () => {
+    try { setConversations((await requestJson("/api/messages/direct/inbox")).conversations); }
+    catch (err) { setError(err instanceof Error ? err.message : "Unable to load messages."); }
+  }, []);
+  useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
+  if (error) return <StateCard title="Inbox unavailable" description={error} />;
+  return <div className="grid gap-6"><header><p className="text-sm font-semibold text-indigo-300">DIRECT MESSAGES</p><h1 className="mt-2 text-3xl font-semibold">Inbox</h1><p className="mt-2 text-muted">Continue a private conversation with a friend.</p></header>{conversations.length ? <div className="grid gap-3">{conversations.map((conversation) => <Link href={`/messages/${conversation.userId}`} key={conversation.userId}><Card className="flex items-center gap-3 transition hover:border-indigo-300/40"><Avatar name={conversation.partner.display_name} src={conversation.partner.avatar_url} /><div className="min-w-0 flex-1"><p className="font-semibold">{conversation.partner.display_name}</p><p className="truncate text-sm text-muted">{conversation.lastMessage.content}</p></div>{conversation.unreadCount > 0 && <span className="rounded-full bg-indigo-500 px-2 py-1 text-xs font-semibold">{conversation.unreadCount}</span>}</Card></Link>)}</div> : <StateCard title="No direct messages yet" description="Start a conversation from your Friends list." action={<MessageCircle className="mx-auto h-10 w-10 text-indigo-300/60" />} />}</div>;
+}
+
 export function DirectMessageView({ userId }: { userId: string }) {
   const [messages, setMessages] = useState<Message[]>([]); const [recipient, setRecipient] = useState<Profile | null>(null); const [error, setError] = useState("");
   const load = useCallback(async () => { try { const body = await requestJson(`/api/messages/direct?userId=${userId}`); setMessages(body.messages); setRecipient(body.recipient); } catch (err) { setError(err instanceof Error ? err.message : "Unable to load messages."); } }, [userId]);
   useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
-  const onRealtime = useMemo(() => (message: Message) => setMessages((current) => appendUniqueById(current, message)), []);
-  useRealtime("direct_messages", `recipient_id=eq.${userId}`, onRealtime);
+  const onRealtime = useMemo(() => (message: Message) => {
+    if (message.sender_id !== userId && message.recipient_id !== userId) return;
+    setMessages((current) => appendUniqueById(current, message));
+  }, [userId]);
+  useRealtime("direct_messages", "", onRealtime);
   const send = async (content: string) => { try { const body = await requestJson("/api/messages/direct", { method: "POST", body: JSON.stringify({ recipientId: userId, content }) }); setMessages((current) => current.some((item) => item.id === body.message.id) ? current : [...current, body.message]); } catch (err) { setError(err instanceof Error ? err.message : "Unable to send message."); } };
   if (error && !recipient) return <StateCard title="Conversation unavailable" description={error} />;
   return <div className="grid gap-4"><Link href="/friends" className="text-sm text-indigo-300">← Back to friends</Link><Card><div className="flex items-center gap-3"><Avatar name={recipient?.display_name} src={recipient?.avatar_url} /><div><h1 className="text-xl font-semibold">{recipient?.display_name ?? "Conversation"}</h1><p className="text-sm text-muted">@{recipient?.username}</p></div></div><div className="my-6 grid min-h-96 content-start gap-3">{messages.length ? messages.map((message) => <div key={message.id} className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${message.sender_id === userId ? "bg-white/[.06]" : "ml-auto bg-indigo-500/20"}`}>{message.content}<p className="mt-1 text-[10px] text-slate-500">{new Date(message.created_at).toLocaleTimeString()}</p></div>) : <StateCard title="Start the conversation" description="Say hello and make a plan." />}</div><MessageComposer onSend={send} placeholder="Write a message..." /></Card></div>;
@@ -71,6 +87,17 @@ export function GroupsHub() {
   return <div className="grid gap-6"><header><p className="text-sm font-semibold text-violet-300">PRIVATE GROUPS</p><h1 className="mt-2 text-3xl font-semibold">Groups</h1><p className="mt-2 text-muted">Small, private spaces for the people you trust.</p></header><Card><form onSubmit={create} className="flex gap-2"><Input className="min-w-0 flex-1" aria-label="Group name" placeholder="New group name" value={name} onChange={(event) => setName(event.target.value)} required /><Button><Users className="h-4 w-4" />Create group</Button></form></Card>{error && <p role="alert" className="text-sm text-red-300">{error}</p>}{groups.length ? <div className="grid gap-3 md:grid-cols-2">{groups.map((group) => <Link href={`/groups/${group.id}`} key={group.id}><Card className="transition hover:border-violet-300/40"><h2 className="font-semibold">{group.name}</h2><p className="mt-1 text-sm text-muted">{group.description || "Private group chat"}</p></Card></Link>)}</div> : <StateCard title="No groups yet" description="Create a private group for your circle." />}</div>;
 }
 
+function GroupMembers({ groupId }: { groupId: string }) {
+  const router = useRouter();
+  const [members, setMembers] = useState<Array<{ user_id: string; role: string; profile?: Profile }>>([]);
+  const [friendId, setFriendId] = useState(""); const [error, setError] = useState("");
+  const load = useCallback(async () => { try { setMembers((await requestJson(`/api/groups/${groupId}`)).members); } catch (err) { setError(err instanceof Error ? err.message : "Unable to load members."); } }, [groupId]);
+  useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
+  const updateMember = async (method: "POST" | "DELETE", userId: string) => { try { await requestJson(`/api/groups/${groupId}/members`, { method, body: JSON.stringify({ userId }) }); setFriendId(""); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Unable to update members."); } };
+  const leave = async () => { try { await requestJson(`/api/groups/${groupId}/leave`, { method: "POST" }); router.push("/groups"); } catch (err) { setError(err instanceof Error ? err.message : "Unable to leave group."); } };
+  return <Card><h2 className="font-semibold">Members</h2><div className="mt-3 grid gap-2">{members.map((member) => member.profile && <div key={member.user_id} className="flex items-center gap-3 rounded-xl border border-white/10 p-2"><Avatar name={member.profile.display_name} src={member.profile.avatar_url} size="sm" /><span className="min-w-0 flex-1 text-sm">{member.profile.display_name}</span><span className="text-xs text-muted">{member.role}</span>{member.role !== "owner" && <Button variant="danger" onClick={() => void updateMember("DELETE", member.user_id)}>Remove</Button>}</div>)}</div><div className="mt-4 flex gap-2"><input className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.04] px-3 text-sm text-slate-100 outline-none focus:border-indigo-400" value={friendId} onChange={(event) => setFriendId(event.target.value)} placeholder="Friend user ID to invite" aria-label="Friend user ID" /><Button disabled={!friendId} onClick={() => void updateMember("POST", friendId)}>Invite</Button><Button variant="ghost" onClick={() => void leave()}>Leave</Button></div>{error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}</Card>;
+}
+
 export function GroupView({ groupId }: { groupId: string }) {
   const [group, setGroup] = useState<{ name: string; description?: string | null } | null>(null); const [messages, setMessages] = useState<Message[]>([]); const [error, setError] = useState("");
   const load = useCallback(async () => { try { const [details, messageBody] = await Promise.all([requestJson(`/api/groups/${groupId}`), requestJson(`/api/groups/${groupId}/messages`)]); setGroup(details.group); setMessages(messageBody.messages); } catch (err) { setError(err instanceof Error ? err.message : "Unable to load group."); } }, [groupId]);
@@ -79,5 +106,5 @@ export function GroupView({ groupId }: { groupId: string }) {
   useRealtime("group_messages", `group_id=eq.${groupId}`, onRealtime);
   const send = async (content: string) => { try { const body = await requestJson(`/api/groups/${groupId}/messages`, { method: "POST", body: JSON.stringify({ content }) }); setMessages((current) => current.some((item) => item.id === body.message.id) ? current : [...current, body.message]); } catch (err) { setError(err instanceof Error ? err.message : "Unable to send message."); } };
   if (!group) return <StateCard title="Group unavailable" description={error || "Loading group..."} />;
-  return <div className="grid gap-4"><Link href="/groups" className="text-sm text-indigo-300">← Back to groups</Link><Card><h1 className="text-xl font-semibold">{group.name}</h1><p className="text-sm text-muted">{group.description}</p><div className="my-6 grid min-h-96 content-start gap-3">{messages.map((message) => <div key={message.id} className="rounded-2xl bg-white/[.06] px-4 py-3 text-sm">{message.content}</div>)}</div><MessageComposer onSend={send} placeholder="Message the group..." /></Card></div>;
+  return <div className="grid gap-4"><Link href="/groups" className="text-sm text-indigo-300">← Back to groups</Link><Card><h1 className="text-xl font-semibold">{group.name}</h1><p className="text-sm text-muted">{group.description}</p><div className="my-6 grid min-h-96 content-start gap-3">{messages.map((message) => <div key={message.id} className="rounded-2xl bg-white/[.06] px-4 py-3 text-sm">{message.content}</div>)}</div><MessageComposer onSend={send} placeholder="Message the group..." /></Card><GroupMembers groupId={groupId} /></div>;
 }

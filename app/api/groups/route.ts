@@ -20,9 +20,15 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid group details." }, { status: 400 });
   const { supabase, user } = await getSocialUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { data: group, error } = await supabase.from("groups").insert({ owner_id: user.id, name: parsed.data.name, description: parsed.data.description ?? null, avatar_url: parsed.data.avatarUrl ?? null }).select("id, owner_id, name, description, avatar_url, created_at, updated_at").single();
-  if (error || !group) return NextResponse.json({ error: "Unable to create group." }, { status: 500 });
-  const { error: memberError } = await supabase.from("group_members").insert({ group_id: group.id, user_id: user.id, role: "owner" });
-  if (memberError) return NextResponse.json({ error: "Unable to initialize group membership." }, { status: 500 });
+  const groupId = crypto.randomUUID();
+  const { error } = await supabase.from("groups").insert({ id: groupId, owner_id: user.id, name: parsed.data.name, description: parsed.data.description ?? null, avatar_url: parsed.data.avatarUrl ?? null });
+  if (error) return NextResponse.json({ error: "Unable to create group." }, { status: 500 });
+  const { error: memberError } = await supabase.from("group_members").insert({ group_id: groupId, user_id: user.id, role: "owner" });
+  if (memberError) {
+    await supabase.from("groups").delete().eq("id", groupId).eq("owner_id", user.id);
+    return NextResponse.json({ error: "Unable to initialize group membership." }, { status: 500 });
+  }
+  const { data: group, error: groupError } = await supabase.from("groups").select("id, owner_id, name, description, avatar_url, created_at, updated_at").eq("id", groupId).single();
+  if (groupError || !group) return NextResponse.json({ error: "Unable to load the new group." }, { status: 500 });
   return NextResponse.json({ group }, { status: 201 });
 }

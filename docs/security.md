@@ -115,3 +115,5 @@ Every incoming API request, server action, and realtime payload is validated usi
 - Group metadata, members, and messages require membership. Only owners/admins manage membership or group metadata; only owners delete groups.
 - Realtime subscriptions use the existing Supabase client and are removed during component cleanup. Realtime is not an authorization boundary; RLS and server route checks remain authoritative.
 - Group invitations require an accepted friendship. No notification or game execution path is connected to invitations.
+- `supabase/migrations/20260913210000_pass4_social.sql` repeats these boundaries in PostgreSQL RLS and adds check constraints for self relationships, friendship states, group roles, and message lengths. Realtime publication is limited to persisted social message tables; it is not treated as an authorization mechanism.
+- Public discovery reads the `public_profiles` view, which exposes only `id`, `username`, `display_name`, `avatar_url`, and `bio`; the base `profiles` table allows row reads only for the profile owner. Database triggers prevent direct clients from changing DM participants/content or transferring group ownership.

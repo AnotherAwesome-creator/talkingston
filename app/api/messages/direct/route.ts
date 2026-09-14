@@ -6,7 +6,7 @@ const messageSchema = z.object({ recipientId: z.string().uuid(), content: z.stri
 const querySchema = z.object({ userId: z.string().uuid(), page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(50).default(30) });
 
 async function verifyRecipient(supabase: Awaited<ReturnType<typeof getSocialUser>>["supabase"], userId: string, recipientId: string) {
-  const { data } = await supabase.from("profiles").select("id").eq("id", recipientId).maybeSingle();
+  const { data } = await supabase.from("public_profiles").select("id").eq("id", recipientId).maybeSingle();
   if (!data) return false;
   return !(await areBlocked(supabase, userId, recipientId));
 }

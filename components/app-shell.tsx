@@ -13,6 +13,7 @@ const nav = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/games", label: "Games", icon: Gamepad2 },
   { href: "/friends", label: "Friends", icon: Users },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/groups", label: "Groups", icon: MessagesSquare },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

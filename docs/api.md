@@ -181,11 +181,13 @@ Sends a direct message.
 - `POST /api/friends/respond`: accepts or declines a pending request addressed to the authenticated user.
 - `PATCH /api/friends/:id`: cancels, removes, blocks, or unblocks a relationship with server-side ownership checks.
 - `GET|POST /api/messages/direct`: loads paginated messages for an authenticated participant pair or sends a message to an available recipient.
+- `GET /api/messages/direct/inbox`: returns recent participant-scoped DM threads with last message and unread count.
 - `PATCH /api/messages/direct/:id`: marks a received message read.
 - `GET|POST /api/groups`: lists the authenticated user's groups or creates a private group.
 - `GET|PATCH|DELETE /api/groups/:id`: loads, edits, or deletes a group for authorized members/managers.
 - `POST|DELETE /api/groups/:id/members`: invites an accepted friend or removes a member/leaves a group.
 - `GET|POST /api/groups/:id/messages`: loads paginated group messages or sends a member message.
+- `POST /api/groups/:id/leave`: allows a non-owner member to leave.
 
 The browser subscribes to Supabase Realtime `postgres_changes` events for direct and group message inserts. The social invitation foundation validates Whot/Trivia invitation metadata in `lib/social/invitations.ts`; no game rooms or invitation notifications are implemented.
 

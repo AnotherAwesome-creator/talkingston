@@ -1,17 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 
 export const publicProfileFields = "id, username, display_name, avatar_url, bio";
+export const publicProfileRelation = "public_profiles";
+
+export function isMissingAuthSession(error: { name?: string } | null) {
+  return error?.name === "AuthSessionMissingError";
+}
 
 export async function getSocialUser() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw new Error(`Unable to verify your session: ${error.message}`);
+  if (error && !isMissingAuthSession(error)) throw new Error(`Unable to verify your session: ${error.message}`);
   return { supabase, user };
 }
 
 export async function getProfileMap(supabase: Awaited<ReturnType<typeof createClient>>, ids: string[]) {
   if (ids.length === 0) return new Map<string, Record<string, unknown>>();
-  const { data } = await supabase.from("profiles").select(publicProfileFields).in("id", [...new Set(ids)]);
+  const { data } = await supabase.from(publicProfileRelation).select(publicProfileFields).in("id", [...new Set(ids)]);
   return new Map((data ?? []).map((profile) => [profile.id as string, profile]));
 }
 

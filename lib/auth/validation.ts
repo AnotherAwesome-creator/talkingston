@@ -16,6 +16,7 @@ export const profileSchema = z.object({
   displayName: z.string().trim().min(2).max(80),
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,24}$/, "Use 3-24 letters, numbers, or underscores."),
   avatarUrl: z.string().url().or(z.literal("")),
+  bio: z.string().trim().max(500),
 });
 
 export const settingsSchema = z.object({

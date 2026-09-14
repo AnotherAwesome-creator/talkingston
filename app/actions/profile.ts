@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { onboardingSchema, profileSchema, settingsSchema, type OnboardingInput } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
+import { isMissingAuthSession } from "@/lib/social/server";
 
 export async function saveOnboarding(input: OnboardingInput) {
   const parsed = onboardingSchema.safeParse(input);
@@ -39,12 +40,12 @@ export async function saveOnboarding(input: OnboardingInput) {
 async function getAuthenticatedClient() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw new Error(`Unable to verify your session: ${error.message}`);
+  if (error && !isMissingAuthSession(error)) throw new Error(`Unable to verify your session: ${error.message}`);
   if (!user) return { supabase, user: null };
   return { supabase, user };
 }
 
-export async function saveProfile(input: { displayName: string; username: string; avatarUrl: string }) {
+export async function saveProfile(input: { displayName: string; username: string; avatarUrl: string; bio: string }) {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Please provide a valid name, username, and avatar URL." };
   const { supabase, user } = await getAuthenticatedClient();
@@ -53,6 +54,7 @@ export async function saveProfile(input: { displayName: string; username: string
     display_name: parsed.data.displayName,
     username: parsed.data.username,
     avatar_url: parsed.data.avatarUrl || null,
+    bio: parsed.data.bio || null,
     updated_at: new Date().toISOString(),
   }).eq("id", user.id);
   if (error) return { ok: false as const, error: error.message };

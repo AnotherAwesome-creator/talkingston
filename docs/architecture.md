@@ -204,6 +204,8 @@ Pass 4 adds server-authorized social route handlers under `app/api/users`, `app/
 
 Client social views subscribe to Supabase Realtime Postgres insert events using the existing browser client. Subscriptions are removed on unmount, and message IDs are de-duplicated when an optimistic response and realtime event both arrive. Group access is checked through `group_members` before metadata, membership, or messages are returned.
 
+The Pass 4 migration is the source of truth for social persistence and RLS. A dedicated DM inbox aggregates recent participant-scoped messages server-side. Presence is intentionally not enabled: no durable or authorized presence contract existed in the current schema, so the UI does not display fabricated online status.
+
 ---
 
 ## 6. Document-to-Quiz Pipeline

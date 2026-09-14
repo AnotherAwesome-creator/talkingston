@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { appendUniqueById, canTransitionFriendship } from "@/lib/social/state";
 import { createGameInvitation, gameInvitationSchema } from "@/lib/social/invitations";
+import { isMissingAuthSession } from "@/lib/social/server";
 
 describe("social state boundaries", () => {
   it("prevents invalid friendship transitions", () => {
@@ -16,6 +17,12 @@ describe("social state boundaries", () => {
     const message = { id: "message-1", content: "hello" };
     expect(appendUniqueById([message], message)).toHaveLength(1);
     expect(appendUniqueById([], message)).toEqual([message]);
+  });
+
+  it("treats an absent auth session as unauthenticated", () => {
+    expect(isMissingAuthSession({ name: "AuthSessionMissingError" })).toBe(true);
+    expect(isMissingAuthSession({ name: "AuthApiError" })).toBe(false);
+    expect(isMissingAuthSession(null)).toBe(false);
   });
 
   it("validates game invitation foundations without implementing game logic", () => {

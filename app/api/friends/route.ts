@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const { supabase, user } = await getSocialUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (parsed.data.targetUserId === user.id) return NextResponse.json({ error: "You cannot friend yourself." }, { status: 400 });
-  const { data: target } = await supabase.from("profiles").select("id").eq("id", parsed.data.targetUserId).maybeSingle();
+  const { data: target } = await supabase.from("public_profiles").select("id").eq("id", parsed.data.targetUserId).maybeSingle();
   if (!target) return NextResponse.json({ error: "User not found." }, { status: 404 });
   const { data: existing } = await supabase.from("friendships").select("id, user_id, friend_id, status")
     .or(`and(user_id.eq.${user.id},friend_id.eq.${target.id}),and(user_id.eq.${target.id},friend_id.eq.${user.id})`);

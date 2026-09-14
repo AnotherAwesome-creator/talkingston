@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSocialUser, publicProfileFields } from "@/lib/social/server";
+import { getSocialUser, publicProfileFields, publicProfileRelation } from "@/lib/social/server";
 
 const querySchema = z.object({
   q: z.string().trim().min(2).max(50),
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { q, page, limit } = parsed.data;
   const from = (page - 1) * limit;
-  const { data, error } = await supabase.from("profiles").select(publicProfileFields)
+  const { data, error } = await supabase.from(publicProfileRelation).select(publicProfileFields)
     .neq("id", user.id).or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
     .order("username").range(from, from + limit - 1);
   if (error) return NextResponse.json({ error: "Unable to search users." }, { status: 500 });

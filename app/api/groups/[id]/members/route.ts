@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (parsed.data.userId === user.id) return NextResponse.json({ error: "You are already a member." }, { status: 400 });
   const { data: friendship } = await supabase.from("friendships").select("id").eq("status", "accepted").or(`and(user_id.eq.${user.id},friend_id.eq.${parsed.data.userId}),and(user_id.eq.${parsed.data.userId},friend_id.eq.${user.id})`).maybeSingle();
   if (!friendship) return NextResponse.json({ error: "You can only invite an accepted friend." }, { status: 403 });
-  const { data: target } = await supabase.from("profiles").select("id").eq("id", parsed.data.userId).maybeSingle();
+  const { data: target } = await supabase.from("public_profiles").select("id").eq("id", parsed.data.userId).maybeSingle();
   if (!target) return NextResponse.json({ error: "User not found." }, { status: 404 });
   const { data, error } = await supabase.from("group_members").insert({ group_id: id, user_id: target.id, role: "member" }).select("group_id, user_id, role, joined_at").single();
   if (error) return NextResponse.json({ error: "User is already a member or could not be invited." }, { status: 409 });

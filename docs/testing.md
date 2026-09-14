@@ -93,6 +93,8 @@ npm run lint
 
 `tests/social.test.ts` covers valid and invalid friendship transitions, duplicate realtime message protection, and Whot/Trivia invitation metadata validation without live Supabase or Realtime credentials. Social route handlers additionally enforce authenticated ownership and membership checks at the API boundary.
 
+The migration is reviewed statically for social table constraints, RLS policy coverage, and Realtime publication entries. Live two-account RLS/Realtime verification remains environment-dependent because this repository does not contain a linked Supabase project configuration or integration-test credentials.
+
 ## 6. Pass 3 Tests
 
 The same focused suite also covers provider fallback on rate limits, non-retryable failure stopping, process-local health failure tracking, and active-project context isolation. Supabase-backed history, search, and project routes use authenticated owner filters and are verified through the existing type/lint/build gates without live credentials.

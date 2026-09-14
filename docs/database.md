@@ -2,7 +2,7 @@
 
 > **Implementation Status (Stage 2A)**:
 > The client/server connection layer (`lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts`, `lib/supabase/middleware.ts`) is established and verified.
-> The tables, extensions, indexes, and RLS policies detailed below represent the authoritative target schema to be deployed via migrations in **Stage 2B**. No tables or migrations have been created yet.
+> The tables, extensions, indexes, and RLS policies detailed below represent the authoritative target schema. Pass 4 adds a forward-only social migration under `supabase/migrations/`.
 
 This document specifies the PostgreSQL database schema, data models, extensions, indexes, and Row Level Security (RLS) policies for Talkingston V1 on Supabase.
 
@@ -335,7 +335,7 @@ Pass 2 uses the existing target tables without introducing duplicates:
 - `user_memories` stores only extracted persistent candidates and is always queried/deleted with the authenticated `user_id`.
 - `profiles` and `companion_settings` remain the source of stable profile, personality, and proactivity context.
 
-The repository still contains no migrations; deployment requires the documented schema and RLS policies to exist in Supabase.
+The repository includes a forward-only Pass 4 social migration; deployment still requires applying the documented schema and RLS policies to Supabase.
 
 ## 5. Pass 4 Social Persistence Usage
 
@@ -347,7 +347,11 @@ Pass 4 uses the documented social tables without duplicate persistence:
 - `groups` and `group_members` define private group ownership, roles, and access.
 - `group_messages` stores member-authored group messages.
 
-The application performs server-side authentication and membership checks before every social read/write. Supabase RLS remains the authoritative database boundary. The repository still has no migration files, so these documented tables, indexes, RLS policies, and Realtime publication settings must be deployed before production use.
+The application performs server-side authentication and membership checks before every social read/write. Supabase RLS remains the authoritative database boundary. The migration and its Realtime publication settings must be applied before production use.
+
+## 6. Pass 4 migration
+
+`supabase/migrations/20260913210000_pass4_social.sql` creates or extends the social tables, adds self/role/status/content constraints, adds participant and membership indexes, enables RLS, installs participant/member/owner policies, exposes only the five approved fields through `public_profiles`, protects immutable DM/group ownership fields with triggers, and adds `direct_messages` and `group_messages` to `supabase_realtime`. The migration is forward-only and does not reset or drop existing data.
 
 ## 5. Pass 3 Persistence Usage
 
