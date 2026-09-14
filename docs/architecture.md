@@ -223,3 +223,4 @@ The V1 document ingestion pipeline processes study materials deterministically:
 5. **Storage**: Verified questions stored in PostgreSQL for solo practice or live quiz rooms.
 
 Whot follows the same boundary: pure TypeScript validates and mutates game state, API routes authorize the room member and persist versioned state, and Supabase Realtime distributes persisted events. AI commentary or opponent heuristics may only consume engine-approved events and legal moves.
+- Productivity uses owner-scoped Route Handlers backed by RLS. Reminders are persisted records; no worker or external scheduler is introduced in V1. Notifications are persisted in-app events, with database triggers for existing friend-request and direct-message events.

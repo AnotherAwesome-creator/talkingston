@@ -362,3 +362,4 @@ The application performs server-side authentication and membership checks before
 ## 5. Pass 3 Persistence Usage
 
 Pass 3 uses the documented `projects` table as the ownership boundary for project metadata and associates conversations through `conversations.project_id`. Conversation history uses bounded pages and search queries are scoped by the authenticated owner before returning title/snippet results. The `is_archived` conversation flag supports archive without deleting history.
+- Pass 7 adds `tasks`, `reminders`, `notifications`, and `notification_preferences`, all protected by owner RLS. `profiles.profile_visibility` controls the existing `public_profiles` view.

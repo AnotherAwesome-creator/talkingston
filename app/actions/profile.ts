@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { onboardingSchema, profileSchema, settingsSchema, type OnboardingInput } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
 import { isMissingAuthSession } from "@/lib/social/server";
+import { profileVisibilityValues } from "@/lib/productivity/state";
 
 export async function saveOnboarding(input: OnboardingInput) {
   const parsed = onboardingSchema.safeParse(input);
@@ -45,7 +46,7 @@ async function getAuthenticatedClient() {
   return { supabase, user };
 }
 
-export async function saveProfile(input: { displayName: string; username: string; avatarUrl: string; bio: string }) {
+export async function saveProfile(input: { displayName: string; username: string; avatarUrl: string; bio: string; profileVisibility?: string }) {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Please provide a valid name, username, and avatar URL." };
   const { supabase, user } = await getAuthenticatedClient();
@@ -68,6 +69,18 @@ export async function saveProfile(input: { displayName: string; username: string
   }
   revalidatePath("/settings/profile");
   revalidatePath("/home");
+  return { ok: true as const };
+}
+
+export async function savePrivacySettings(input: { profileVisibility: string }) {
+  if (!profileVisibilityValues.includes(input.profileVisibility as typeof profileVisibilityValues[number])) {
+    return { ok: false as const, error: "Choose a valid profile visibility setting." };
+  }
+  const { supabase, user } = await getAuthenticatedClient();
+  if (!user) return { ok: false as const, error: "Your session has expired. Please sign in again." };
+  const { error } = await supabase.from("profiles").update({ profile_visibility: input.profileVisibility, updated_at: new Date().toISOString() }).eq("id", user.id);
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath("/settings/profile");
   return { ok: true as const };
 }
 

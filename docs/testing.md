@@ -102,3 +102,4 @@ The migration is reviewed statically for social table constraints, RLS policy co
 The same focused suite also covers provider fallback on rate limits, non-retryable failure stopping, process-local health failure tracking, and active-project context isolation. Supabase-backed history, search, and project routes use authenticated owner filters and are verified through the existing type/lint/build gates without live credentials.
 
 Whot unit tests cover the 54-card deck, five-card dealing, legal/illegal card selection, and exhaustion scoring. Room API and cross-account Realtime tests require the Whot migration and multiple authenticated identities in the live project.
+- Pass 7 unit coverage verifies task/reminder validation, deterministic due-state, notification unread counting, and privacy preference schemas. Live RLS, Storage, Realtime, email, and second-account flows remain environment-dependent and are not represented as passing tests.

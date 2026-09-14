@@ -178,3 +178,4 @@ Friendships, direct messages, groups, members, and group messages use the docume
 ## ADR-005: Whot state authority
 
 Whot legality, effects, scoring, and winner calculation remain deterministic and independent of AI providers. Room APIs persist the resulting state with a version check, redact private hands in responses, and use Supabase Realtime only for synchronization.
+- Pass 7 keeps reminders as persisted schedule records without a worker. Authenticated APIs can create, activate, deactivate, and cancel them; delivery is intentionally not implemented until a later deployment phase.

@@ -240,3 +240,4 @@ Lists and updates user notification statuses.
 `GET /api/users/search?q=&page=&limit=` requires authentication, bounds results to 20, excludes the caller, escapes wildcard syntax, and selects only the `public_profiles` fields. `GET /api/users/:id` returns the same public field set.
 
 `GET /api/whot/rooms` lists member rooms. `POST /api/whot/rooms` creates a room. `POST /api/whot/rooms/:id/join` joins a lobby. `GET` and `POST /api/whot/rooms/:id` read redacted state and submit validated draw/play actions. Server-side state transitions use the pure Whot engine and optimistic version checks.
+- Productivity endpoints: `/api/tasks`, `/api/tasks/[id]`, `/api/reminders`, `/api/reminders/[id]`, `/api/notifications`, `/api/notifications/[id]`, and `/api/settings/privacy`. All require an authenticated session and validate input with Zod.

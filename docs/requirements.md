@@ -125,3 +125,4 @@ Pass 4 implements authenticated user discovery, public profile cards, friend req
 - **Alternative In-Memory Databases**: Supabase PostgreSQL is the authoritative persistence engine; no duplicate in-memory DB will be built.
 
 Username discovery is authenticated, bounded, case-insensitive, excludes the caller, and returns only the public profile projection. Whot room state is server-authoritative and deterministic; the current implementation persists versioned room state and redacts opponents' hands.
+- Pass 7 adds authenticated tasks, task-linked reminders, in-app notifications, and profile privacy controls. Email, push, and background reminder workers are intentionally out of scope.
