@@ -68,6 +68,7 @@ AI_PROVIDER=mock
    - `supabase/migrations/20260914121500_pass5_whot_lifecycle.sql`
    - `supabase/migrations/20260914130000_pass7_productivity.sql`
    - `supabase/migrations/20260914140000_recover_pass1_3_schema.sql`
+   - `supabase/migrations/20260915150000_reminder_delivery.sql`
 
 ### 3.2 Realtime Publication Setup
 Enable Realtime replication on the following tables in Supabase:
@@ -90,3 +91,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
 4. Verify that non-authenticated requests to private tables are blocked by RLS.
 
 Talkingston does not currently expose a dedicated `/api/health` route.
+
+## 5. Scheduled reminder delivery
+
+The reminder migration enables Supabase `pg_cron` and schedules the
+`talkingston-reminder-delivery` job every minute. It calls the transactional
+`public.deliver_due_reminders(100)` function inside Supabase, so it does not
+depend on a Vercel plan or expose a worker endpoint. Apply the migration before
+production use, then schedule a reminder a few minutes ahead and confirm one
+unread `reminder` notification plus its realtime arrival. Re-running the
+delivery function is idempotent.

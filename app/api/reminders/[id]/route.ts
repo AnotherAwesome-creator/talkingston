@@ -12,10 +12,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const changes = {
     ...(parsed.data.scheduledAt === undefined ? {} : { scheduled_at: parsed.data.scheduledAt }),
+    ...(parsed.data.scheduledAt === undefined ? {} : { delivered_at: null, delivery_claimed_at: null }),
     ...(parsed.data.active === undefined ? {} : { active: parsed.data.active }),
     updated_at: new Date().toISOString(),
   };
-  const { data, error } = await supabase.from("reminders").update(changes).eq("id", id).eq("owner_id", user.id).select("id, task_id, scheduled_at, active, created_at, updated_at").maybeSingle();
+  const { data, error } = await supabase.from("reminders").update(changes).eq("id", id).eq("owner_id", user.id).select("id, task_id, scheduled_at, active, delivered_at, created_at, updated_at").maybeSingle();
   if (error) return NextResponse.json({ error: "Unable to update reminder." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Reminder not found." }, { status: 404 });
   return NextResponse.json({ reminder: data });

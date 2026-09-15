@@ -4,6 +4,27 @@ Pass 6 adds deterministic Trivia and a bounded document-to-quiz pipeline. AI may
 
 This document defines the high-level architecture, module boundaries, data flow pipelines, and technical contracts governing Talkingston V1.
 
+## Reminder delivery
+
+Reminders are one-shot, in-app notifications. The browser submits the user's
+local date and time as an ISO timestamp; `reminders.scheduled_at` is a
+PostgreSQL `timestamptz`, so it represents the selected absolute instant
+regardless of where the scheduler runs. The UI formats that instant in the
+user's local timezone.
+
+Supabase `pg_cron` invokes `public.deliver_due_reminders(100)` every minute
+inside the database. There is no public worker endpoint and no browser
+credential involved. The database function locks and claims active, due,
+undelivered reminders, creates an in-app notification, and marks each reminder
+delivered in one transaction. Stale claims older than five minutes are
+recoverable if a worker is interrupted.
+
+`notifications.reminder_id` has a partial unique index, so repeated cron
+invocations cannot create duplicate notifications for one reminder occurrence.
+Inactive or deleted reminders are excluded. A browser being closed or offline
+does not lose a reminder: once the cron resumes, all due active reminders are
+processed. V1 does not send email, push, or OS notifications.
+
 ---
 
 ## 1. System Topology Overview
