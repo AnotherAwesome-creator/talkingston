@@ -9,9 +9,10 @@ export class GeminiProvider implements AiProvider {
 
   async generateText(messages: AiMessage[], options?: Partial<AiRequestOptions>): Promise<string> {
     const config = normalizeOptions(this.model, options);
+    const systemMessages = messages.filter((message) => message.role === "system");
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`, {
       method: "POST", signal: config.signal, headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: messages.filter((message) => message.role !== "system").map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: [{ text: message.content }] })), systemInstruction: messages.find((message) => message.role === "system") ? { parts: [{ text: messages.find((message) => message.role === "system")?.content }] } : undefined, generationConfig: { temperature: config.temperature, maxOutputTokens: config.maxTokens } }),
+      body: JSON.stringify({ contents: messages.filter((message) => message.role !== "system").map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: [{ text: message.content }] })), systemInstruction: systemMessages.length ? { parts: [{ text: systemMessages.map((message) => message.content).join("\n\n") }] } : undefined, generationConfig: { temperature: config.temperature, maxOutputTokens: config.maxTokens, ...(config.responseMimeType ? { responseMimeType: config.responseMimeType } : {}) } }),
     });
     const data = await readJsonResponse(response, this.name) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     const content = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("");
@@ -21,6 +22,6 @@ export class GeminiProvider implements AiProvider {
 
   async *streamText(messages: AiMessage[], options?: Partial<AiRequestOptions>): AsyncIterable<string> { yield await this.generateText(messages, options); }
   async generateStructured<T>(messages: AiMessage[], schema: z.ZodType<T>, options?: Partial<AiRequestOptions>): Promise<T> {
-    return parseStructured(await this.generateText([{ role: "system", content: "Return only valid JSON." }, ...messages], options), schema, this.name);
+    return parseStructured(await this.generateText([{ role: "system", content: "Return only valid JSON." }, ...messages], { ...options, responseMimeType: "application/json" }), schema, this.name);
   }
 }

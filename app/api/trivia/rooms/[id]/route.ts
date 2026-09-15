@@ -24,13 +24,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!parsed.success || !z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Invalid trivia action." }, { status: 400 });
   const { supabase, user } = await getSocialUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { data: room, error } = await supabase.from("trivia_rooms").select("id, owner_id, status, questions, state, version").eq("id", id).single();
-  if (error || !room) return NextResponse.json({ error: "Room not found." }, { status: 404 });
   if (parsed.data.action === "join") {
     const { error: joinError } = await supabase.from("trivia_players").upsert({ room_id: id, user_id: user.id });
     if (joinError) return NextResponse.json({ error: "Unable to join room." }, { status: 409 });
     return NextResponse.json({ success: true });
   }
+  const { data: room, error } = await supabase.from("trivia_rooms").select("id, owner_id, status, questions, state, version").eq("id", id).single();
+  if (error || !room) return NextResponse.json({ error: "Room not found." }, { status: 404 });
   if (room.owner_id !== user.id && parsed.data.action !== "answer") return NextResponse.json({ error: "Only the room owner can control this room." }, { status: 403 });
   const state = room.state as TriviaRoomState;
   if (parsed.data.action === "start" || parsed.data.action === "rematch") {
@@ -47,7 +47,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const result = submitAnswer(state, question, { userId: user.id, questionId: question.id, optionIndex: parsed.data.optionIndex, submittedAtMs: elapsedMs });
     const { error: answerError } = await supabase.from("trivia_answers").insert({ room_id: id, user_id: user.id, question_id: question.id, option_index: parsed.data.optionIndex, submitted_at_ms: elapsedMs });
     if (answerError) return NextResponse.json({ error: "Answer already submitted." }, { status: 409 });
-    const nextState = advanceQuestion(result.state, (room.questions as TriviaQuestion[]).length);
+    const { count: playerCount } = await supabase.from("trivia_players").select("user_id", { count: "exact", head: true }).eq("room_id", id);
+    const nextState = (playerCount ?? 0) <= result.state.submissions.length
+      ? advanceQuestion(result.state, (room.questions as TriviaQuestion[]).length)
+      : { ...result.state, locked: false };
     const { error: stateError } = await supabase.from("trivia_rooms").update({ status: nextState.finished ? "finished" : "active", state: nextState, version: room.version + 1 }).eq("id", id).eq("version", room.version);
     if (stateError) return NextResponse.json({ error: "Room changed; reload and try again." }, { status: 409 });
     return NextResponse.json({ success: true, score: result.score, finished: nextState.finished });

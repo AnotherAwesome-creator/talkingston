@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { drawCard, getLegalMoves, playCard, rematchGame, startGame, type WhotState } from "@/lib/games/whot";
+import { announceCheck, chooseWhotSuit, drawCard, getLegalMoves, playCard, rematchGame, startGame, type WhotState } from "@/lib/games/whot";
 import { getSocialUser } from "@/lib/social/server";
 
-const actionSchema = z.object({ action: z.enum(["ready", "start", "pause", "rematch", "draw", "play", "chat"]), cardId: z.string().optional(), calledSuit: z.enum(["circle", "triangle", "cross", "square", "star"]).optional(), message: z.string().trim().min(1).max(500).optional() }).strict();
+const actionSchema = z.object({ action: z.enum(["ready", "start", "pause", "rematch", "draw", "play", "check", "choose_suit", "chat"]), cardId: z.string().optional(), calledSuit: z.enum(["circle", "triangle", "cross", "square", "star"]).optional(), message: z.string().trim().min(1).max(500).optional() }).strict();
 
 function privateState(state: WhotState, userId: string) {
   return {
@@ -70,6 +70,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       Object.assign(state, next);
     }
     if (parsed.data.action === "draw") drawCard(state, user.id);
+    if (parsed.data.action === "check") announceCheck(state, user.id);
+    if (parsed.data.action === "choose_suit") {
+      if (!parsed.data.calledSuit) return NextResponse.json({ error: "A suit is required." }, { status: 400 });
+      chooseWhotSuit(state, user.id, parsed.data.calledSuit);
+    }
     if (parsed.data.action === "play") {
       if (!parsed.data.cardId) return NextResponse.json({ error: "A card is required." }, { status: 400 });
       playCard(state, user.id, parsed.data.cardId, parsed.data.calledSuit);

@@ -20,9 +20,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { value } = await aiProviderRouter.generateStructured({
       task: "quiz_generation",
       messages: [
-        { role: "system", content: "Create multiple-choice questions from the supplied document. Return only valid structured questions. Never invent facts not supported by the document." },
+        { role: "system", content: "Create multiple-choice questions from the supplied document. Return only a JSON array. Every item must contain exactly these fields: id (short string), question (string), options (exactly four strings), correctOptionIndex (integer 0-3), explanation (string), category (string), difficulty (one of easy, medium, hard), timerMs (integer between 5000 and 120000), and metadata (object of string values). Never invent facts not supported by the document." },
         { role: "user", content: `Create ${parsed.data.count} questions from:\n${document.extracted_text.slice(0, 100000)}` },
       ],
+      options: { maxTokens: Math.min(6000, parsed.data.count * 700 + 300) },
     }, questionArray);
     const questions = validateGeneratedQuiz(value);
     const { data: quiz, error: saveError } = await supabase.from("document_quizzes").insert({ owner_id: user.id, document_id: document.id, questions }).select("id, document_id, created_at").single();

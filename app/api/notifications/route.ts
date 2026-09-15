@@ -31,3 +31,13 @@ export async function PATCH(request: Request) {
   if (error) return NextResponse.json({ error: "Unable to update notifications." }, { status: 500 });
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(request: Request) {
+  const parsed = z.object({ notificationId: z.string().uuid() }).safeParse(await request.json());
+  if (!parsed.success) return NextResponse.json({ error: "Invalid notification." }, { status: 400 });
+  const { supabase, user } = await getSocialUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { error } = await supabase.from("notifications").delete().eq("id", parsed.data.notificationId).eq("user_id", user.id);
+  if (error) return NextResponse.json({ error: "Unable to delete notification." }, { status: 500 });
+  return NextResponse.json({ success: true });
+}

@@ -40,6 +40,7 @@ export function normalizeOptions(defaultModel: string, options?: Partial<AiReque
     temperature: options?.temperature ?? 0.7,
     maxTokens: options?.maxTokens ?? 800,
     signal: options?.signal,
+    responseMimeType: options?.responseMimeType,
   };
 }
 

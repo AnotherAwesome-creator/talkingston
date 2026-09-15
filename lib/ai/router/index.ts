@@ -47,6 +47,11 @@ export class AiProviderRouter implements ProviderResolver {
         recordProviderSuccess(candidate.provider);
         return { provider: candidate.provider, value };
       } catch (error) {
+        console.error("[ai] structured provider failed", {
+          provider: candidate.provider,
+          task: request.task,
+          message: error instanceof Error ? error.message : "Unknown provider error",
+        });
         const retryable = error instanceof AiProviderError ? error.retryable : false;
         recordProviderFailure(candidate.provider, retryable);
         if (!retryable) break;

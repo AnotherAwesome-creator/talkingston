@@ -15,6 +15,7 @@ export interface AiModelConfig {
 
 export interface AiRequestOptions extends AiModelConfig {
   signal?: AbortSignal;
+  responseMimeType?: "application/json";
 }
 
 export class AiProviderError extends Error {
