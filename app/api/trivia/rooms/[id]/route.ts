@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const state = data.state as TriviaRoomState;
   const questions = data.questions as TriviaQuestion[];
   const current = questions[state.index ?? 0];
-  return NextResponse.json({ room: { id: data.id, owner_id: data.owner_id, status: data.status, version: data.version, question: data.status === "active" && !state.finished ? { id: current.id, question: current.question, options: current.options, category: current.category, difficulty: current.difficulty, timerMs: current.timerMs } : current, scores: rankScores(state.scores), locked: state.locked, finished: state.finished, startedAtMs: state.startedAtMs } });
+  return NextResponse.json({ room: { id: data.id, owner_id: data.owner_id, status: data.status, version: data.version, question: data.status === "active" && !state.finished ? { id: current.id, question: current.question, options: current.options, category: current.category, difficulty: current.difficulty, timerMs: current.timerMs } : current, scores: rankScores(state.scores), locked: state.locked, answered: state.submissions.some((submission) => submission.userId === user.id && submission.questionId === current.id), waitingForPlayers: state.submissions.length > 0 && !state.finished, finished: state.finished, startedAtMs: state.startedAtMs } });
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {

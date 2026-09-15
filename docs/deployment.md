@@ -62,20 +62,21 @@ AI_PROVIDER=mock
    CREATE EXTENSION IF NOT EXISTS "pg_trgm";
    ```
 3. Run the migrations in order:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_social_and_groups.sql`
-   - `supabase/migrations/003_games_whot_trivia.sql`
-   - `supabase/migrations/004_projects_tasks_notifications.sql`
-   - `supabase/migrations/005_rls_policies.sql`
+   - `supabase/migrations/20260913210000_pass4_social.sql`
+   - `supabase/migrations/20260914100000_pass5_whot.sql`
+   - `supabase/migrations/20260914113000_pass6_trivia_documents.sql`
+   - `supabase/migrations/20260914121500_pass5_whot_lifecycle.sql`
+   - `supabase/migrations/20260914130000_pass7_productivity.sql`
+   - `supabase/migrations/20260914140000_recover_pass1_3_schema.sql`
 
 ### 3.2 Realtime Publication Setup
 Enable Realtime replication on the following tables in Supabase:
 ```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.whot_sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.whot_events;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.direct_messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.group_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.quiz_rooms;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.quiz_participants;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.trivia_rooms;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.trivia_answers;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
 ```
 
@@ -83,7 +84,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
 
 ## 4. Verification & Health Check
 
-1. Verify Next.js health endpoint: `GET /api/health` returns `200 OK`.
+1. Run the production smoke test against the deployed app: load `/login`, authenticate, and open a protected route such as `/home`.
 2. Check Supabase connection and vector extension availability.
-3. Test Realtime WebSocket connection from the browser console.
+3. Test Realtime WebSocket connection from the browser console and verify the required publication tables are enabled.
 4. Verify that non-authenticated requests to private tables are blocked by RLS.
+
+Talkingston does not currently expose a dedicated `/api/health` route.

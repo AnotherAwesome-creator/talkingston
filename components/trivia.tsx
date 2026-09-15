@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Room = { id: string; status: string };
 type Question = { id: string; question: string; options: string[]; category: string; difficulty: string; timerMs: number };
-type RoomState = { question: Question; scores: Array<{ userId: string; score: number; rank: number }>; locked: boolean; finished: boolean; startedAtMs: number | null };
+type RoomState = { question: Question; scores: Array<{ userId: string; score: number; rank: number }>; locked: boolean; answered: boolean; waitingForPlayers: boolean; finished: boolean; startedAtMs: number | null };
 
 async function request<T>(url: string, options?: RequestInit) {
   const response = await fetch(url, { headers: { "Content-Type": "application/json" }, ...options });
@@ -35,11 +35,12 @@ function TriviaRoom({ roomId }: { roomId: string }) {
   useEffect(() => {
     const client = createClient();
     const channel = client.channel(`trivia:${roomId}`).on("postgres_changes", { event: "UPDATE", schema: "public", table: "trivia_rooms", filter: `id=eq.${roomId}` }, () => void load()).subscribe();
-    return () => { void client.removeChannel(channel); };
+    const timer = window.setInterval(() => void load(), 3000);
+    return () => { window.clearInterval(timer); void client.removeChannel(channel); };
   }, [roomId, load]);
   const start = async () => { await request(`/api/trivia/rooms/${roomId}`, { method: "POST", body: JSON.stringify({ action: "start" }) }); await load(); };
   const answer = async (index: number) => { try { await request(`/api/trivia/rooms/${roomId}`, { method: "POST", body: JSON.stringify({ action: "answer", questionId: roomState?.question.id, optionIndex: index }) }); setMessage("Answer locked."); await load(); } catch (err) { setMessage(err instanceof Error ? err.message : "Unable to submit answer."); } };
   if (!roomState) return <StateCard title="Loading trivia" description={message || "Preparing the next question..."} />;
   const question = roomState.question;
-  return <div className="grid max-w-2xl gap-6"><Link href="/trivia" className="text-sm text-indigo-300">← Trivia lobby</Link><Card><p className="text-sm text-muted">{question.category} · {question.difficulty} · {question.timerMs / 1000}s</p><h1 className="mt-3 text-2xl font-semibold">{roomState.finished ? "Results" : question.question}</h1>{!roomState.finished && <div className="mt-5 grid gap-3">{question.options.map((option, index) => <Button key={option} disabled={roomState.locked} variant="secondary" onClick={() => void answer(index)}>{option}</Button>)}</div>}<p className="mt-4 text-sm text-muted">{roomState.locked ? "Answer locked" : roomState.finished ? "Quiz finished" : "Choose one answer"}</p><ol className="mt-4 grid gap-1 text-sm">{roomState.scores.map((score) => <li key={score.userId}>#{score.rank} {score.userId}: {score.score}</li>)}</ol><Button className="mt-5" onClick={() => void start()}>Start / rematch</Button>{message && <p role="status" className="mt-3 text-sm text-emerald-300">{message}</p>}</Card></div>;
+  return <div className="grid max-w-2xl gap-6"><Link href="/trivia" className="text-sm text-indigo-300">← Trivia lobby</Link><Card><p className="text-sm text-muted">{question.category} · {question.difficulty} · {question.timerMs / 1000}s</p><h1 className="mt-3 text-2xl font-semibold">{roomState.finished ? "Results" : question.question}</h1>{!roomState.finished && !roomState.answered && <div className="mt-5 grid gap-3">{question.options.map((option, index) => <Button key={option} disabled={roomState.locked} variant="secondary" onClick={() => void answer(index)}>{option}</Button>)}</div>}<p className="mt-4 text-sm text-muted">{roomState.finished ? "Results" : roomState.answered ? "Waiting for another player" : roomState.waitingForPlayers ? "Waiting for you" : "Waiting for you"}</p><ol className="mt-4 grid gap-1 text-sm">{roomState.scores.map((score) => <li key={score.userId}>#{score.rank} {score.userId}: {score.score}</li>)}</ol><Button className="mt-5" onClick={() => void start()}>Start / rematch</Button>{message && <p role="status" className="mt-3 text-sm text-emerald-300">{message}</p>}</Card></div>;
 }
