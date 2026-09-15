@@ -51,13 +51,14 @@ export async function saveProfile(input: { displayName: string; username: string
   if (!parsed.success) return { ok: false as const, error: "Please provide a valid name, username, and avatar URL." };
   const { supabase, user } = await getAuthenticatedClient();
   if (!user) return { ok: false as const, error: "Your session has expired. Please sign in again." };
-  const { error } = await supabase.from("profiles").update({
+  const { data: savedProfile, error } = await supabase.from("profiles").upsert({
+    id: user.id,
     display_name: parsed.data.displayName,
     username: parsed.data.username,
     avatar_url: parsed.data.avatarUrl || null,
     bio: parsed.data.bio || null,
     updated_at: new Date().toISOString(),
-  }).eq("id", user.id);
+  }, { onConflict: "id" }).select("id, display_name").single();
   if (error) {
     if (
       error.code === "23505"
@@ -67,6 +68,7 @@ export async function saveProfile(input: { displayName: string; username: string
     }
     return { ok: false as const, error: error.message };
   }
+  if (!savedProfile) return { ok: false as const, error: "Your profile could not be saved. Please try again." };
   revalidatePath("/settings/profile");
   revalidatePath("/home");
   return { ok: true as const };

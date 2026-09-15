@@ -5,7 +5,7 @@ import type { AiMessage, AiProvider, AiRequestOptions } from "./types";
 export class GeminiProvider implements AiProvider {
   readonly name = "gemini";
   readonly model: string;
-  constructor(private readonly apiKey: string, model = "gemini-2.0-flash") { this.model = model; }
+  constructor(private readonly apiKey: string, model = "gemini-3.6-flash") { this.model = model; }
 
   async generateText(messages: AiMessage[], options?: Partial<AiRequestOptions>): Promise<string> {
     const config = normalizeOptions(this.model, options);

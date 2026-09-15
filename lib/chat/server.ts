@@ -2,11 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { AiMessage } from "@/lib/ai/providers";
 import { assembleContext, type Personality, type Proactivity } from "@/lib/ai/context";
 import { extractMemoryCandidates } from "@/lib/ai/memory";
+import { isMissingAuthSession } from "@/lib/social/server";
 
 export async function getChatUser() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw new Error(`Unable to verify your session: ${error.message}`);
+  if (error && !isMissingAuthSession(error)) throw new Error(`Unable to verify your session: ${error.message}`);
   if (!user) return { supabase, user: null };
   return { supabase, user };
 }

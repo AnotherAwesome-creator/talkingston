@@ -7,7 +7,7 @@ export default async function ProfileSettingsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const result = await supabase.from("profiles").select("display_name, username, avatar_url, bio, profile_visibility").eq("id", user.id).maybeSingle();
+      const result = await supabase.from("profiles").select("display_name, username, avatar_url, bio").eq("id", user.id).maybeSingle();
       profile = result.data;
     }
   }

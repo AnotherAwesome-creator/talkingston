@@ -1,6 +1,6 @@
 # Talkingston V1 — Database Schema & Data Models
 
-The forward-only Pass 6 migration adds `trivia_rooms`, `trivia_players`, `trivia_answers`, `user_documents`, and `document_quizzes`. Ownership and room membership are protected by RLS; private document objects use the owner UUID as their storage prefix. No database reset or blind push is part of this change.
+The forward-only Pass 6 migration adds `trivia_rooms`, `trivia_players`, `trivia_answers`, `user_documents`, and `document_quizzes`. The Pass 7 recovery migration restores the existing Pass 1-3 companion, project, conversation, message, and memory tables when they are absent from a manually provisioned remote project. Ownership and room membership are protected by RLS; private document objects use the owner UUID as their storage prefix. No database reset or blind push is part of this change.
 
 > **Implementation Status (Stage 2A)**:
 > The client/server connection layer (`lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts`, `lib/supabase/middleware.ts`) is established and verified.
