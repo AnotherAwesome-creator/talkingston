@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { appendUniqueById, canTransitionFriendship } from "@/lib/social/state";
 import { createGameInvitation, gameInvitationSchema } from "@/lib/social/invitations";
 import { escapeProfileSearchTerm, isMissingAuthSession } from "@/lib/social/server";
+import { canonicalFriendPair, normalizeShareCode } from "@/lib/social/friends";
 import { profileSchema } from "@/lib/auth/validation";
 
 describe("social state boundaries", () => {
@@ -18,6 +19,18 @@ describe("social state boundaries", () => {
     const message = { id: "message-1", content: "hello" };
     expect(appendUniqueById([message], message)).toHaveLength(1);
     expect(appendUniqueById([], message)).toEqual([message]);
+  });
+
+  it("normalizes exact friend codes and canonicalizes either friendship direction", () => {
+    expect(normalizeShareCode(" ab12cd34 ")).toBe("AB12CD34");
+    expect(canonicalFriendPair("b-user", "a-user")).toEqual(["a-user", "b-user"]);
+    expect(canonicalFriendPair("a-user", "b-user")).toEqual(["a-user", "b-user"]);
+  });
+
+  it("rejects self-add and invalid friend codes at the boundary", () => {
+    const code = normalizeShareCode("not-a-real-code");
+    expect(code).toBe("NOT-A-REAL-CODE");
+    expect(canonicalFriendPair("same-user", "same-user")).toEqual(["same-user", "same-user"]);
   });
 
   it("treats an absent auth session as unauthenticated", () => {

@@ -2,13 +2,16 @@ import { z } from "zod";
 import { validateQuestions, type TriviaQuestion } from "@/lib/games/trivia";
 
 export const supportedDocumentTypes = ["application/pdf", "text/plain", "text/markdown"] as const;
+// Hard server-side upload ceiling. Both the API route and the UI reference this
+// single value so the limit cannot drift between client and server.
+export const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
 export const documentQuizInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   content: z.string().trim().min(1).max(100000),
 });
 
 export function validateDocument(file: { type: string; size: number }) {
-  return supportedDocumentTypes.includes(file.type as typeof supportedDocumentTypes[number]) && file.size > 0 && file.size <= 10 * 1024 * 1024;
+  return supportedDocumentTypes.includes(file.type as typeof supportedDocumentTypes[number]) && file.size > 0 && file.size <= MAX_DOCUMENT_BYTES;
 }
 
 export function extractText(buffer: Buffer, type: string) {

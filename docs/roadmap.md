@@ -10,7 +10,8 @@ This document outlines the delivery plan, milestone dependencies, stage gating c
 |---|---|---|---|---|
 | **M1** | Stage 1 | Master Documentation & Project Foundation | **In Progress** | 11 docs complete, dependencies installed, test harness active |
 | **M2** | Stage 2 | Database Schema, Migrations & Supabase Client | Pending | SQL migrations applied, typed client verified, RLS in place |
-| **M3** | Stage 3 | Auth, User Onboarding & Companion Personalization | Pending | Auth flow, multi-step onboarding, personality settings working |
+| **M3** | Stage 3 | Auth, User Onboarding
+ & Companion Personalization | Pending | Auth flow, multi-step onboarding, personality settings working |
 | **M4** | Stage 4 | AI Context Engine, Provider Abstraction & Chat | Pending | 9 context vectors, memory extraction/retrieval, chat streaming |
 | **M5** | Stage 5 | Pure TypeScript Authoritative Whot Engine | Pending | Deterministic Whot rules, AI bot, realtime multiplayer, tests |
 | **M6** | Stage 6 | Deterministic Trivia, Doc-to-Quiz & Quiz Rooms | Pending | Trivia engine, PDF/TXT/MD parsing, multiplayer rooms |

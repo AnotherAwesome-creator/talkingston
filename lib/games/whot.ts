@@ -4,6 +4,36 @@ export type CardSuit = WhotSuit | "whot";
 export type WhotCard = { id: string; suit: CardSuit; value: number };
 export type WhotPlayer = { id: string; hand: WhotCard[] };
 export type WhotStatus = "lobby" | "active" | "finished";
+export type WhotRules = {
+  initialHand: number;
+  drawMode: "one" | "until-playable";
+  emptyMarketMode: "score" | "recycle";
+  clockwise: boolean;
+  starDouble: boolean;
+  whotEnabled: boolean;
+  pickTwoMode: "stack" | "block" | "none";
+  pickThreeMode: "stack" | "block" | "none";
+  stackPenalties: boolean;
+  mustPlayWhenPossible: boolean;
+  skipOnEight: boolean;
+  drawOnFourteen: boolean;
+  extraTurnOnOne: boolean;
+};
+export const defaultWhotRules: WhotRules = {
+  initialHand: 5,
+  drawMode: "one",
+  emptyMarketMode: "score",
+  clockwise: true,
+  starDouble: true,
+  whotEnabled: true,
+  pickTwoMode: "stack",
+  pickThreeMode: "stack",
+  stackPenalties: true,
+  mustPlayWhenPossible: true,
+  skipOnEight: true,
+  drawOnFourteen: true,
+  extraTurnOnOne: true,
+};
 export type WhotState = {
   id: string;
   players: WhotPlayer[];
@@ -17,6 +47,8 @@ export type WhotState = {
   winnerId: string | null;
   lastAction: string | null;
   version: number;
+  rules: WhotRules;
+  activity: string[];
 };
 
 export type WhotActionError = Error & { code: string };
@@ -29,12 +61,12 @@ const suitValues: Record<WhotSuit, number[]> = {
   star: [1, 2, 3, 4, 5, 7, 8],
 };
 
-export function createDeck(): WhotCard[] {
+export function createDeck(whotEnabled = true): WhotCard[] {
   const cards: WhotCard[] = [];
   for (const suit of whotSuits) {
     for (const value of suitValues[suit]) cards.push({ id: `${suit}-${value}-${cards.length}`, suit, value });
   }
-  for (let index = 0; index < 4; index += 1) cards.push({ id: `whot-20-${index}`, suit: "whot", value: 20 });
+  if (whotEnabled) for (let index = 0; index < 4; index += 1) cards.push({ id: `whot-20-${index}`, suit: "whot", value: 20 });
   return cards;
 }
 
@@ -65,17 +97,19 @@ function actionError(code: string, message: string): WhotActionError {
   return Object.assign(new Error(message), { code });
 }
 
-export function createGame(id: string, playerIds: string[], random = Math.random): WhotState {
+export function createGame(id: string, playerIds: string[], random = Math.random, rules: Partial<WhotRules> = defaultWhotRules): WhotState {
   if (playerIds.length < 2 || playerIds.length > 4 || new Set(playerIds).size !== playerIds.length) throw new Error("Whot games require 2 to 4 unique players.");
-  const deck = shuffle(createDeck(), random);
-  const players = playerIds.map((playerId) => ({ id: playerId, hand: deck.splice(0, 5) }));
+  const mergedRules = { ...defaultWhotRules, ...rules };
+  const deck = shuffle(createDeck(mergedRules.whotEnabled), random);
+  const handSize = Math.max(3, Math.min(12, mergedRules.initialHand));
+  const players = playerIds.map((playerId) => ({ id: playerId, hand: deck.splice(0, handSize) }));
   let opening = deck.pop() as WhotCard;
   while ([1, 2, 5, 8, 14, 20].includes(opening.value) && deck.length) {
     deck.unshift(opening);
     opening = deck.pop() as WhotCard;
   }
 
-  return { id, players, drawPile: deck, discardPile: [opening], currentPlayer: 0, direction: 1, pendingDraw: 0, calledSuit: null, status: "active", winnerId: null, lastAction: "GAME_STARTED", version: 1 };
+  return { id, players, drawPile: deck, discardPile: [opening], currentPlayer: 0, direction: mergedRules.clockwise ? 1 : -1, pendingDraw: 0, calledSuit: null, status: "active", winnerId: null, lastAction: "GAME_STARTED", version: 1, rules: mergedRules, activity: ["Game started"] };
 }
 
 export function startGame(state: WhotState) {
@@ -89,37 +123,58 @@ export function startGame(state: WhotState) {
 }
 
 export function rematchGame(state: WhotState, random = Math.random) {
-  return createGame(state.id, state.players.map((player) => player.id), random);
+  return createGame(state.id, state.players.map((player) => player.id), random, state.rules);
 }
 
 export function getLegalMoves(state: WhotState, playerId: string) {
   const player = state.players.find((entry) => entry.id === playerId);
   if (!player || state.status !== "active" || state.players[state.currentPlayer].id !== playerId) return [];
-  if (state.pendingDraw) return player.hand.filter((card) => card.value === topCard(state).value);
+  if (state.pendingDraw) {
+    const mode = state.rules.stackPenalties
+      ? (topCard(state).value === 2 ? state.rules.pickTwoMode : state.rules.pickThreeMode)
+      : "none";
+    return mode !== "none" && player.hand.some((card) => card.value === topCard(state).value) ? player.hand.filter((card) => card.value === topCard(state).value) : [];
+  }
   const top = topCard(state);
-  return player.hand.filter((card) => card.suit === "whot" || (state.calledSuit ? card.suit === state.calledSuit : card.suit === top.suit || card.value === top.value));
+  return player.hand.filter((card) => (card.suit === "whot" && state.rules.whotEnabled) || (state.calledSuit ? card.suit === state.calledSuit : card.suit === top.suit || card.value === top.value));
 }
 
 function advance(state: WhotState, steps = 1) {
   state.currentPlayer = nextIndex(state, state.currentPlayer, steps);
 }
 
+function refillMarket(state: WhotState) {
+  if (state.drawPile.length || state.rules.emptyMarketMode !== "recycle" || state.discardPile.length < 2) return;
+  const top = state.discardPile.pop() as WhotCard;
+  state.drawPile = shuffle(state.discardPile, Math.random);
+  state.discardPile = [top];
+}
+
 export function drawCard(state: WhotState, playerId: string, count = 1) {
   if (state.status !== "active" || state.players[state.currentPlayer].id !== playerId) throw actionError("NOT_YOUR_TURN", "It is not this player's turn.");
-  const drawCount = state.pendingDraw || count;
+  const penaltyCount = state.pendingDraw;
+  const drawCount = penaltyCount || count;
   if (!Number.isInteger(drawCount) || drawCount < 1) throw actionError("INVALID_DRAW_COUNT", "Draw count must be positive.");
   const player = state.players[state.currentPlayer];
-  if (state.pendingDraw === 0 && getLegalMoves(state, playerId).length > 0) {
+  if (penaltyCount === 0 && state.rules.mustPlayWhenPossible && getLegalMoves(state, playerId).length > 0) {
     throw actionError("LEGAL_MOVE_AVAILABLE", "Play a legal card before drawing.");
   }
-  const cardsDrawn = Math.min(drawCount, state.drawPile.length);
-  for (let index = 0; index < drawCount; index += 1) {
-    if (!state.drawPile.length) break;
-    player.hand.push(state.drawPile.pop() as WhotCard);
-  }
+  // Consume the pending penalty before dealing so this explicit Market action
+  // cannot be re-entered or treated as another penalty during resolution.
   state.pendingDraw = 0;
+  const drawn: WhotCard[] = [];
+  for (let index = 0; index < drawCount; index += 1) {
+    refillMarket(state);
+    if (!state.drawPile.length) break;
+    const card = state.drawPile.pop() as WhotCard;
+    player.hand.push(card);
+    drawn.push(card);
+    if (!penaltyCount && state.rules.drawMode === "until-playable" && getLegalMoves(state, playerId).length > 0) break;
+  }
+  const cardsDrawn = drawn.length;
   state.calledSuit = null;
-  state.lastAction = `DRAW_${cardsDrawn}`;
+  state.lastAction = `MARKET_${cardsDrawn}`;
+  state.activity = [`${playerId} went to Market${cardsDrawn > 1 ? ` for ${cardsDrawn} cards` : ""}`, ...state.activity].slice(0, 20);
   advance(state);
   if (!state.drawPile.length && state.players.every((entry) => entry.hand.length > 0)) state.status = "finished";
   if (state.status === "finished") state.winnerId = calculateWinner(state);
@@ -138,19 +193,25 @@ export function playCard(state: WhotState, playerId: string, cardId: string, cal
   if (card.suit === "whot" && !calledSuit) throw actionError("SUIT_REQUIRED", "A Whot suit must be called.");
   player.hand.splice(cardIndex, 1);
   state.discardPile.push(card);
-  state.pendingDraw = card.value === 2 ? (state.pendingDraw || 0) + 2 : card.value === 5 ? (state.pendingDraw || 0) + 3 : 0;
+  const penalty = card.value === 2 ? 2 : card.value === 5 ? 3 : 0;
+  const mode = state.rules.stackPenalties
+    ? (card.value === 2 ? state.rules.pickTwoMode : state.rules.pickThreeMode)
+    : "none";
+  state.pendingDraw = penalty ? mode === "stack" ? state.pendingDraw + penalty : penalty : 0;
   state.calledSuit = card.suit === "whot" ? calledSuit ?? null : null;
   state.lastAction = card.suit === "whot" ? `WHOT_CALLED_${calledSuit}` : `PLAY_${card.value}`;
+  const effect = card.value === 2 ? " — Pick Two" : card.value === 5 ? " — Pick Three" : card.value === 8 ? " — Suspension" : card.value === 14 ? " — General Market" : card.value === 1 ? " — Hold On" : card.suit === "whot" ? " — Whot" : "";
+  state.activity = [`${playerId} played ${card.suit === "whot" ? "WHOT" : card.value}${effect}`, ...state.activity].slice(0, 20);
   if (!player.hand.length) {
     state.status = "finished";
     state.winnerId = playerId;
     state.lastAction = "CHECK_WIN";
   } else {
-    if (card.value === 1) {
+    if (card.value === 1 && state.rules.extraTurnOnOne) {
       state.currentPlayer = playerIndex;
-    } else if (card.value === 8) {
+    } else if (card.value === 8 && state.rules.skipOnEight) {
       advance(state, 2);
-    } else if (card.value === 14) {
+    } else if (card.value === 14 && state.rules.drawOnFourteen) {
       for (const other of state.players.filter((_, index) => index !== playerIndex)) if (state.drawPile.length) other.hand.push(state.drawPile.pop() as WhotCard);
       advance(state);
     } else advance(state);
@@ -168,6 +229,7 @@ export function announceCheck(state: WhotState, playerId: string) {
   const player = state.players.find((entry) => entry.id === playerId);
   if (!player || player.hand.length !== 1) throw actionError("INVALID_CHECK", "Check is only valid with one card remaining.");
   state.lastAction = "CHECK";
+  state.activity = [`${playerId} called check`, ...state.activity].slice(0, 20);
   state.version += 1;
 }
 
@@ -188,10 +250,10 @@ export function applyEffect(state: WhotState) {
   state.version += 1;
 }
 
-export function calculateScore(hand: WhotCard[]) {
-  return hand.reduce((total, card) => total + (card.suit === "star" ? card.value * 2 : card.value), 0);
+export function calculateScore(hand: WhotCard[], starDouble = true) {
+  return hand.reduce((total, card) => total + (card.suit === "star" && starDouble ? card.value * 2 : card.value), 0);
 }
 
 export function calculateWinner(state: WhotState) {
-  return [...state.players].sort((left, right) => calculateScore(left.hand) - calculateScore(right.hand) || left.hand.length - right.hand.length)[0]?.id ?? null;
+  return [...state.players].sort((left, right) => calculateScore(left.hand, state.rules.starDouble) - calculateScore(right.hand, state.rules.starDouble) || left.hand.length - right.hand.length)[0]?.id ?? null;
 }

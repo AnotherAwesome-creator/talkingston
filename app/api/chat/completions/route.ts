@@ -17,12 +17,13 @@ export async function POST(request: Request) {
   if (userMessageError) return NextResponse.json({ error: "Unable to save your message." }, { status: 500 });
   try {
     const context = await buildConversationContext(supabase, user.id, conversationId, message, projectId ?? conversation.project_id ?? undefined);
+    const { aiProviderRouter } = await import("@/lib/ai/router");
+    aiProviderRouter.candidates("companion_chat");
     const encoder = new TextEncoder();
     let complete = "";
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const { aiProviderRouter } = await import("@/lib/ai/router");
           for await (const result of aiProviderRouter.streamText({ task: "companion_chat", messages: context.messages })) {
             complete += result.chunk;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: result.chunk })}\n\n`));

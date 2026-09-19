@@ -37,6 +37,11 @@ export async function buildConversationContext(supabase: Awaited<ReturnType<type
 }
 
 export async function saveExtractedMemories(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, message: string) {
+  // Extraction only runs inside a user-initiated turn, never in the background.
+  // It is skipped entirely when the user has asked Talkingston to be maximally
+  // passive (proactivity "Off"), so no memory is written without consent.
+  const { data: settings } = await supabase.from("companion_settings").select("proactivity").eq("user_id", userId).maybeSingle();
+  if (settings?.proactivity === "Off") return;
   const candidates = extractMemoryCandidates(message);
   if (candidates.length === 0) return;
   await supabase.from("user_memories").upsert(candidates.map((candidate) => ({ user_id: userId, ...candidate, updated_at: new Date().toISOString() })), { onConflict: "user_id,content" });

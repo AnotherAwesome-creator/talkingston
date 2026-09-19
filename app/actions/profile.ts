@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { onboardingSchema, profileSchema, settingsSchema, type OnboardingInput } from "@/lib/auth/validation";
+import { companionSetupSchema, onboardingSchema, profileSchema, settingsSchema, type CompanionSetupInput, type OnboardingInput } from "@/lib/auth/validation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isMissingAuthSession } from "@/lib/social/server";
 import { profileVisibilityValues } from "@/lib/productivity/state";
+import { generateProfileShareCode, generateProfileUsername } from "@/lib/auth/profile-bootstrap";
 
 async function profileExists(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
   const { data, error } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
@@ -33,7 +34,7 @@ export async function saveOnboarding(input: OnboardingInput) {
   const profileQuery = profileExists(supabase, user.id)
     .then((exists) => exists
       ? supabase.from("profiles").update(profileValues).eq("id", user.id)
-      : createAdminClient().from("profiles").insert(profileValues));
+      : createAdminClient().from("profiles").insert({ ...profileValues, share_code: generateProfileShareCode() }));
   const { error: profileError } = await profileQuery;
   if (profileError) return { ok: false as const, error: profileError.message };
 
@@ -42,6 +43,52 @@ export async function saveOnboarding(input: OnboardingInput) {
     personality: parsed.data.personality,
     proactivity: parsed.data.proactivity,
     updated_at: new Date().toISOString(),
+  });
+  if (settingsError) return { ok: false as const, error: settingsError.message };
+
+  revalidatePath("/home");
+  revalidatePath("/settings");
+  return { ok: true as const };
+}
+
+// Customize Talkingston: companion-only setup. Never asks for or overwrites the
+// user's name (Profile/auth metadata owns it) or their username (Settings →
+// Profile owns it). A username is only auto-generated the first time a profile
+// row must be created.
+export async function saveCompanionSetup(input: CompanionSetupInput) {
+  const parsed = companionSetupSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Pick at least one interest and a companion style." };
+
+  const supabase = await createClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw new Error(`Unable to verify your session: ${userError.message}`);
+  if (!user) return { ok: false as const, error: "Your session has expired. Please sign in again." };
+
+  const completedAt = new Date().toISOString();
+  const exists = await profileExists(supabase, user.id);
+  if (exists) {
+    const { error } = await supabase.from("profiles").update({ interests: parsed.data.interests, onboarding_completed: true, updated_at: completedAt }).eq("id", user.id);
+    if (error) return { ok: false as const, error: error.message };
+  } else {
+    const metaName = typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name.trim() : "";
+    const fallbackName = user.email?.split("@")[0] ?? "Friend";
+    const inserted = await createAdminClient().from("profiles").insert({
+      id: user.id,
+      username: generateProfileUsername(metaName || fallbackName),
+      display_name: (metaName || fallbackName).slice(0, 80),
+      share_code: generateProfileShareCode(),
+      interests: parsed.data.interests,
+      onboarding_completed: true,
+      updated_at: completedAt,
+    });
+    if (inserted.error) return { ok: false as const, error: inserted.error.message };
+  }
+
+  const { error: settingsError } = await supabase.from("companion_settings").upsert({
+    user_id: user.id,
+    personality: parsed.data.personality,
+    proactivity: parsed.data.proactivity,
+    updated_at: completedAt,
   });
   if (settingsError) return { ok: false as const, error: settingsError.message };
 

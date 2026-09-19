@@ -20,6 +20,17 @@ export class AiProviderRouter implements ProviderResolver {
   }
 
   candidates(task: AiTask) {
+    if (process.env.NODE_ENV === "production") {
+      const configuredProvider = process.env.AI_PROVIDER;
+      if (!configuredProvider || configuredProvider === "mock") {
+        throw new AiProviderError("Production AI requires an explicitly configured real provider.", "router", undefined, "invalid_request");
+      }
+      const instance = this.resolve(configuredProvider, task);
+      if (!instance) {
+        throw new AiProviderError(`AI provider '${configuredProvider}' is missing its server-side API key or is unsupported.`, configuredProvider, undefined, "authentication");
+      }
+      return [{ provider: configuredProvider, instance }];
+    }
     return configuredOrder().map((provider) => ({ provider, instance: this.resolve(provider, task) }))
       .filter((entry): entry is { provider: string; instance: AiProvider } => Boolean(entry.instance))
       .filter((entry) => providerAvailable(entry.provider));

@@ -8,7 +8,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params; const { supabase, user } = await getSocialUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!(await isGroupMember(supabase, id, user.id))) return NextResponse.json({ error: "Group not found." }, { status: 404 });
-  const { data: group, error } = await supabase.from("groups").select("id, owner_id, name, description, avatar_url, created_at, updated_at").eq("id", id).single();
+  const { data: group, error } = await supabase.from("groups").select("id, owner_id, name, description, avatar_url, join_code, created_at, updated_at").eq("id", id).single();
   if (error) return NextResponse.json({ error: "Group not found." }, { status: 404 });
   const { data: memberships } = await supabase.from("group_members").select("group_id, user_id, role, joined_at").eq("group_id", id);
   const profiles = await getProfileMap(supabase, (memberships ?? []).map((item) => item.user_id));

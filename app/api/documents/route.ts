@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { extractText, validateDocument } from "@/lib/games/document-quiz";
+import { extractText, MAX_DOCUMENT_BYTES, validateDocument } from "@/lib/games/document-quiz";
 import { getSocialUser } from "@/lib/social/server";
 
 export async function POST(request: Request) {
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const form = await request.formData();
   const file = form.get("file");
-  if (!(file instanceof File) || !validateDocument(file)) return NextResponse.json({ error: "Only bounded PDF, TXT, or Markdown files are supported." }, { status: 400 });
+  if (!(file instanceof File) || !validateDocument(file)) return NextResponse.json({ error: `Upload a PDF, TXT, or Markdown file up to ${Math.round(MAX_DOCUMENT_BYTES / (1024 * 1024))} MB.` }, { status: 400 });
   const text = extractText(Buffer.from(await file.arrayBuffer()), file.type);
   const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
   const { error: uploadError } = await supabase.storage.from("private-documents").upload(path, Buffer.from(text), { contentType: file.type, upsert: false });

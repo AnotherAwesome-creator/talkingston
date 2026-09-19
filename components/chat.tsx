@@ -50,6 +50,8 @@ export function ChatExperience() {
     setConversations((current) => [data.conversation, ...current]); setActiveId(data.conversation.id); setMessages([]);
   }
   async function deleteConversation(id: string) {
+    const target = conversations.find((conversation) => conversation.id === id);
+    if (!window.confirm(`Delete “${target?.title ?? "this conversation"}”? This permanently removes the conversation and its messages and cannot be undone.`)) return;
     const response = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
     if (!response.ok) { setError("Unable to delete that conversation."); return; }
     const next = conversations.filter((conversation) => conversation.id !== id);

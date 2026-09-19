@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CheckSquare, Gamepad2, Home, LogOut, Menu, Settings, Users, FolderKanban, X, MessageCircle, MessagesSquare } from "lucide-react";
+import { Bell, Home, LogOut, Menu, Settings, Users, X, MessageCircle, MessagesSquare, Gamepad2 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui";
@@ -10,11 +10,9 @@ import { Avatar } from "@/components/ui";
 const nav = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/chat", label: "Companion", icon: MessageCircle },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/games", label: "Games", icon: Gamepad2 },
   { href: "/friends", label: "Friends", icon: Users },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
+  { href: "/messages", label: "Direct Messages", icon: MessageCircle },
+  { href: "/whot", label: "Whot", icon: Gamepad2 },
   { href: "/groups", label: "Groups", icon: MessagesSquare },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },

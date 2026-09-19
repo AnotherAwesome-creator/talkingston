@@ -24,4 +24,15 @@ export const settingsSchema = z.object({
   proactivity: z.enum(proactivityValues),
 });
 
+// Customize Talkingston only gathers companion preferences. Name and username
+// are Profile-owned (collected at sign-up / edited in Settings → Profile) and
+// must not be re-asked here.
+export const companionSetupSchema = z.object({
+  interests: z.array(z.enum(interestValues)).min(1).max(6),
+  personality: z.enum(personalityValues),
+  proactivity: z.enum(proactivityValues),
+});
+
+export type CompanionSetupInput = z.infer<typeof companionSetupSchema>;
+
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
